@@ -13,13 +13,22 @@
 
   <link
     rel="stylesheet"
-    href="css/match.css?v=1"
+    href="css/match.css?v=2"
   >
 </head>
 
 <body>
 
   <main id="matchApp">
+
+    <button
+      id="cancelMatchBtn"
+      class="cancel-btn"
+      type="button"
+    >
+      ✕ CANCEL
+    </button>
+
 
     <section class="match-card">
 
@@ -28,7 +37,10 @@
       </div>
 
 
-      <div class="scanner">
+      <div
+        class="scanner"
+        id="scanner"
+      >
 
         <div class="radar-ring ring-1"></div>
         <div class="radar-ring ring-2"></div>
@@ -60,7 +72,7 @@
         id="searchText"
       >
         SEARCHING
-        <span id="searchDots">...</span>
+        <span id="searchDots">.</span>
       </div>
 
 
@@ -76,7 +88,7 @@
   </main>
 
 
-  <script src="js/match.js?v=3"></script>
+  <script src="js/match.js?v=4"></script>
 
 </body>
 
