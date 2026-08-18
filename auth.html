@@ -13,7 +13,7 @@
 
   <link
     rel="stylesheet"
-    href="css/auth.css?v=10"
+    href="css/auth.css?v=31"
   >
 </head>
 
@@ -62,9 +62,7 @@
       </div>
 
 
-      <!-- =========================
-           LOGIN
-      ========================== -->
+      <!-- LOGIN -->
 
       <section
         class="auth-panel"
@@ -117,19 +115,63 @@
       </section>
 
 
-      <!-- =========================
-           CREATE ACCOUNT
-      ========================== -->
+      <!-- CREATE ACCOUNT -->
 
       <section
         class="auth-panel hidden"
         id="createPanel"
       >
 
+        <!-- GENDER -->
+
+        <div class="section-label">
+          CHOOSE GENDER
+        </div>
+
+        <div
+          class="gender-grid"
+          id="genderGrid"
+        >
+
+          <button
+            class="gender-option"
+            id="boyOption"
+            type="button"
+            data-gender="boy"
+          >
+            <span class="gender-icon">
+              👦
+            </span>
+
+            <span>
+              BOY
+            </span>
+          </button>
+
+
+          <button
+            class="gender-option"
+            id="girlOption"
+            type="button"
+            data-gender="girl"
+          >
+            <span class="gender-icon">
+              👧
+            </span>
+
+            <span>
+              GIRL
+            </span>
+          </button>
+
+        </div>
+
+
+        <!-- AVATAR -->
+
         <div class="section-label">
           CHOOSE AVATAR
         </div>
-
 
         <div
           class="avatar-grid"
@@ -140,7 +182,6 @@
             class="avatar-option selected"
             type="button"
             data-avatar="😎"
-            data-gender="boy"
           >
             😎
           </button>
@@ -149,7 +190,6 @@
             class="avatar-option"
             type="button"
             data-avatar="🧢"
-            data-gender="boy"
           >
             🧢
           </button>
@@ -158,7 +198,6 @@
             class="avatar-option"
             type="button"
             data-avatar="👦"
-            data-gender="boy"
           >
             👦
           </button>
@@ -167,7 +206,6 @@
             class="avatar-option"
             type="button"
             data-avatar="🕶️"
-            data-gender="boy"
           >
             🕶️
           </button>
@@ -176,7 +214,6 @@
             class="avatar-option"
             type="button"
             data-avatar="👧"
-            data-gender="girl"
           >
             👧
           </button>
@@ -185,7 +222,6 @@
             class="avatar-option"
             type="button"
             data-avatar="🎀"
-            data-gender="girl"
           >
             🎀
           </button>
@@ -194,7 +230,6 @@
             class="avatar-option"
             type="button"
             data-avatar="🌸"
-            data-gender="girl"
           >
             🌸
           </button>
@@ -203,13 +238,14 @@
             class="avatar-option"
             type="button"
             data-avatar="✨"
-            data-gender="girl"
           >
             ✨
           </button>
 
         </div>
 
+
+        <!-- USERNAME -->
 
         <div class="field-group">
 
@@ -228,6 +264,8 @@
         </div>
 
 
+        <!-- PASSWORD -->
+
         <div class="field-group">
 
           <label for="createPassword">
@@ -245,6 +283,8 @@
 
         </div>
 
+
+        <!-- COUNTRY -->
 
         <div class="field-group">
 
@@ -354,10 +394,6 @@
       </section>
 
 
-      <!-- =========================
-           MESSAGE
-      ========================== -->
-
       <div
         class="auth-message"
         id="authMessage"
@@ -370,7 +406,7 @@
 
   <script
     type="module"
-    src="js/auth.js?v=11"
+    src="js/auth.js?v=31"
   ></script>
 
 </body>
