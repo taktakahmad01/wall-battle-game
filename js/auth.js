@@ -14,7 +14,8 @@ import {
   browserLocalPersistence,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  onAuthStateChanged
+  onAuthStateChanged,
+  deleteUser
 } from
   "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 
@@ -22,7 +23,6 @@ import {
 import {
   getFirestore,
   doc,
-  getDoc,
   runTransaction,
   serverTimestamp
 } from
@@ -168,6 +168,9 @@ let selectedGender =
 let authReady =
   false;
 
+let creatingAccount =
+  false;
+
 
 /* =========================
    MESSAGE
@@ -200,7 +203,7 @@ function setMessage(
 
 
 /* =========================
-   BUTTON LOADING
+   LOADING
 ========================= */
 
 function setLoginLoading(
@@ -240,7 +243,7 @@ function setCreateLoading(
 
 
 /* =========================
-   USERNAME NORMALIZE
+   USERNAME
 ========================= */
 
 function normalizeUsername(
@@ -253,10 +256,6 @@ function normalizeUsername(
 
 }
 
-
-/* =========================
-   USERNAME VALIDATION
-========================= */
 
 function validUsername(
   username
@@ -271,15 +270,8 @@ function validUsername(
 
 
 /* =========================
-   INTERNAL AUTH EMAIL
+   INTERNAL EMAIL
 ========================= */
-
-/*
-  Firebase password auth كيحتاج email.
-
-  المستخدم ما غاديش يشوف هاد email.
-  كنصاوبوه من username normalized.
-*/
 
 function usernameToEmail(
   usernameLower
@@ -299,74 +291,46 @@ function usernameToEmail(
 
 function showLogin(){
 
-  loginTab
-    .classList
-    .add(
-      "active"
-    );
-
-
-  createTab
-    .classList
-    .remove(
-      "active"
-    );
-
-
-  loginPanel
-    .classList
-    .remove(
-      "hidden"
-    );
-
-
-  createPanel
-    .classList
-    .add(
-      "hidden"
-    );
-
-
-  setMessage(
-    ""
+  loginTab.classList.add(
+    "active"
   );
+
+  createTab.classList.remove(
+    "active"
+  );
+
+  loginPanel.classList.remove(
+    "hidden"
+  );
+
+  createPanel.classList.add(
+    "hidden"
+  );
+
+  setMessage("");
 
 }
 
 
 function showCreate(){
 
-  createTab
-    .classList
-    .add(
-      "active"
-    );
-
-
-  loginTab
-    .classList
-    .remove(
-      "active"
-    );
-
-
-  createPanel
-    .classList
-    .remove(
-      "hidden"
-    );
-
-
-  loginPanel
-    .classList
-    .add(
-      "hidden"
-    );
-
-
-  setMessage(
-    ""
+  createTab.classList.add(
+    "active"
   );
+
+  loginTab.classList.remove(
+    "active"
+  );
+
+  createPanel.classList.remove(
+    "hidden"
+  );
+
+  loginPanel.classList.add(
+    "hidden"
+  );
+
+  setMessage("");
 
 }
 
@@ -394,25 +358,20 @@ avatarOptions.forEach(
       "click",
       ()=>{
 
-        avatarOptions
-          .forEach(
-            item=>{
+        avatarOptions.forEach(
+          item=>{
 
-              item
-                .classList
-                .remove(
-                  "selected"
-                );
+            item.classList.remove(
+              "selected"
+            );
 
-            }
-          );
+          }
+        );
 
 
-        button
-          .classList
-          .add(
-            "selected"
-          );
+        button.classList.add(
+          "selected"
+        );
 
 
         selectedAvatar =
@@ -430,7 +389,7 @@ avatarOptions.forEach(
 
 
 /* =========================
-   SESSION PERSISTENCE
+   PERSISTENCE
 ========================= */
 
 await setPersistence(
@@ -448,7 +407,8 @@ createAccountBtn.addEventListener(
   async ()=>{
 
     if(
-      !authReady
+      !authReady ||
+      creatingAccount
     ){
 
       return;
@@ -484,23 +444,21 @@ createAccountBtn.addEventListener(
 
     const countryName =
       selectedOption
-        ?
-        selectedOption.dataset.name
-        :
-        "";
+      ?
+      selectedOption.dataset.name
+      :
+      "";
 
 
     const countryFlag =
       selectedOption
-        ?
-        selectedOption.dataset.flag
-        :
-        "";
+      ?
+      selectedOption.dataset.flag
+      :
+      "";
 
 
-    /* =========================
-       VALIDATION
-    ========================== */
+    /* VALIDATION */
 
     if(
       !validUsername(
@@ -547,6 +505,10 @@ createAccountBtn.addEventListener(
     }
 
 
+    creatingAccount =
+      true;
+
+
     setCreateLoading(
       true
     );
@@ -565,38 +527,11 @@ createAccountBtn.addEventListener(
     try{
 
       /*
-        STEP 1:
-        Check username before creating Auth account.
-      */
+        1) CREATE AUTH FIRST
 
-      const usernameRef =
-        doc(
-          db,
-          "usernames",
-          usernameLower
-        );
-
-
-      const usernameSnap =
-        await getDoc(
-          usernameRef
-        );
-
-
-      if(
-        usernameSnap.exists()
-      ){
-
-        throw new Error(
-          "USERNAME_TAKEN"
-        );
-
-      }
-
-
-      /*
-        STEP 2:
-        Firebase Auth account.
+        Username هو email داخلي.
+        إلا username موجود، Firebase Auth
+        غادي يرفض هنا مباشرة.
       */
 
       const email =
@@ -622,9 +557,8 @@ createAccountBtn.addEventListener(
 
 
       /*
-        STEP 3:
-        Atomically reserve username
-        and create profile.
+        2) CREATE USERNAME + PROFILE
+           IN ONE FIRESTORE TRANSACTION
       */
 
       await runTransaction(
@@ -639,14 +573,19 @@ createAccountBtn.addEventListener(
             );
 
 
-          const currentUsername =
+          /*
+            دابا user authenticated،
+            لذلك هاد read مسموح.
+          */
+
+          const usernameSnapshot =
             await transaction.get(
               usernameDocument
             );
 
 
           if(
-            currentUsername.exists()
+            usernameSnapshot.exists()
           ){
 
             throw new Error(
@@ -728,10 +667,6 @@ createAccountBtn.addEventListener(
       );
 
 
-      /*
-        Session راه authenticated دابا.
-      */
-
       setTimeout(
         ()=>{
 
@@ -740,7 +675,7 @@ createAccountBtn.addEventListener(
           );
 
         },
-        500
+        450
       );
 
     }
@@ -748,8 +683,39 @@ createAccountBtn.addEventListener(
     catch(error){
 
       console.error(
+        "CREATE ACCOUNT ERROR:",
         error
       );
+
+
+      /*
+        إلا Auth account تخلق ولكن
+        Firestore فشل، نحيد account
+        باش ما يبقاش عندنا compte ناقص.
+      */
+
+      if(
+        createdUser
+      ){
+
+        try{
+
+          await deleteUser(
+            createdUser
+          );
+
+        }
+
+        catch(deleteError){
+
+          console.error(
+            "ROLLBACK ERROR:",
+            deleteError
+          );
+
+        }
+
+      }
 
 
       if(
@@ -812,6 +778,10 @@ createAccountBtn.addEventListener(
     }
 
     finally{
+
+      creatingAccount =
+        false;
+
 
       setCreateLoading(
         false
@@ -912,17 +882,16 @@ loginBtn.addEventListener(
     catch(error){
 
       console.error(
+        "LOGIN ERROR:",
         error
       );
 
 
       if(
         error.code ===
-        "auth/invalid-credential"
-        ||
+        "auth/invalid-credential" ||
         error.code ===
-        "auth/user-not-found"
-        ||
+        "auth/user-not-found" ||
         error.code ===
         "auth/wrong-password"
       ){
@@ -958,7 +927,7 @@ loginBtn.addEventListener(
 
 
 /* =========================
-   ENTER KEY LOGIN
+   ENTER LOGIN
 ========================= */
 
 loginPassword.addEventListener(
@@ -966,7 +935,8 @@ loginPassword.addEventListener(
   event=>{
 
     if(
-      event.key === "Enter"
+      event.key ===
+      "Enter"
     ){
 
       loginBtn.click();
@@ -978,7 +948,7 @@ loginPassword.addEventListener(
 
 
 /* =========================
-   ENTER KEY CREATE
+   ENTER CREATE
 ========================= */
 
 createPassword.addEventListener(
@@ -986,7 +956,8 @@ createPassword.addEventListener(
   event=>{
 
     if(
-      event.key === "Enter"
+      event.key ===
+      "Enter"
     ){
 
       createAccountBtn.click();
@@ -1010,12 +981,13 @@ onAuthStateChanged(
 
 
     /*
-      إلا user راه مسجل من قبل،
-      ما خاصوش يشوف Auth page.
+      أثناء create account ما ندوزوش
+      مباشرة Home حتى يكمل Firestore.
     */
 
     if(
-      user
+      user &&
+      !creatingAccount
     ){
 
       window.location.replace(
