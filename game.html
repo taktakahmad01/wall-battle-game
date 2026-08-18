@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"
+  >
+
+  <title>Wall Battle</title>
+
+  
+  <link rel="stylesheet" href="css/game.css?v=4">
+</head>
+
+<body>
+
+<div id="app">
+
+  <div class="bot-zone">
+
+    <div
+      class="bot-card inactive"
+      id="botCard"
+    >
+
+      <div class="bot-dot"></div>
+
+      <div>
+
+        <div class="bot-name">
+          BOT 🔴
+        </div>
+
+        <div
+          class="bot-state"
+          id="botState"
+        >
+          Waiting...
+        </div>
+
+      </div>
+
+      <div class="wall-count bot-wall-count">
+
+        <span class="wall-icon">
+          🧱
+        </span>
+
+        <span id="redWalls">
+          10
+        </span>
+
+      </div>
+
+    </div>
+
+
+    <div class="bot-energy-space">
+
+      <div
+        class="energy-row bot-energy"
+        id="botEnergy"
+      >
+
+        <span class="energy used">
+          &#9889;
+        </span>
+
+        <span class="energy used">
+          &#9889;
+        </span>
+
+        <span class="energy used">
+          &#9889;
+        </span>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div class="game-middle">
+
+    <div id="board">
+
+      <div id="wallLayer"></div>
+
+      <div id="pawnLayer">
+
+        <div
+          class="pawn blue"
+          id="bluePawn"
+        ></div>
+
+        <div
+          class="pawn red"
+          id="redPawn"
+        ></div>
+
+      </div>
+
+      <div id="slotLayer"></div>
+
+    </div>
+
+  </div>
+
+
+  <div class="player-energy-space">
+
+    <div
+      class="energy-row player-energy"
+      id="playerEnergy"
+    >
+
+      <span class="energy">
+        &#9889;
+      </span>
+
+      <span class="energy">
+        &#9889;
+      </span>
+
+      <span class="energy">
+        &#9889;
+      </span>
+
+    </div>
+
+  </div>
+
+
+  <div class="player-zone">
+
+    <div
+      class="player-card active"
+      id="playerCard"
+    >
+
+      <div class="player-header">
+
+        <div class="player-dot"></div>
+
+        <div>
+
+          <div class="player-name">
+            YOU 🔵
+          </div>
+
+          <div
+            class="player-state"
+            id="playerState"
+          >
+            YOUR TURN
+          </div>
+
+        </div>
+
+        <div class="wall-count player-wall-count">
+
+          <span class="wall-icon">
+            🧱
+          </span>
+
+          <span id="blueWalls">
+            10
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <div class="player-stage">
+
+        <div
+          class="controls-panel"
+          id="controlsPanel"
+        >
+
+          <div class="move-panel">
+
+            <div class="panel-title">
+              MOVE
+            </div>
+
+            <div class="dpad">
+
+              <button
+                class="move-btn move-up"
+                data-dir="up"
+              >
+                &#9650;
+              </button>
+
+              <button
+                class="move-btn move-left"
+                data-dir="left"
+              >
+                &#9664;
+              </button>
+
+              <div class="center-dot">
+                &#9679;
+              </div>
+
+              <button
+                class="move-btn move-right"
+                data-dir="right"
+              >
+                &#9654;
+              </button>
+
+              <button
+                class="move-btn move-down"
+                data-dir="down"
+              >
+                &#9660;
+              </button>
+
+            </div>
+
+          </div>
+
+
+          <div class="wall-panel">
+
+            <div class="panel-title">
+              BLOCK
+            </div>
+
+            <button
+              class="wall-main"
+              id="wallModeBtn"
+            >
+              🧱 PLACE WALL
+            </button>
+
+            <div class="orientation">
+
+              <button
+                class="orientation-btn selected"
+                id="horizontalBtn"
+              >
+                &#9473;&#9473;
+              </button>
+
+              <button
+                class="orientation-btn"
+                id="verticalBtn"
+              >
+                &#9475;
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<div
+  class="overlay hidden"
+  id="resultOverlay"
+>
+
+  <div class="result-card">
+
+    <div
+      class="result-icon"
+      id="resultIcon"
+    >
+      🏆
+    </div>
+
+    <div
+      class="result-title"
+      id="resultTitle"
+    >
+      YOU WIN!
+    </div>
+
+    <div
+      class="result-text"
+      id="resultText"
+    ></div>
+
+    <button
+      class="restart"
+      id="restartBtn"
+    >
+      REVENGE 🔥
+    </button>
+
+  </div>
+
+</div>
+
+
+<script src="js/game.js?v=2"></script>
+
+</body>
+</html>
