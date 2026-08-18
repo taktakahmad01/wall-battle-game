@@ -1741,8 +1741,6 @@ button{
 
 /* =========================================================
    SMALL WIDTH PHONE
-   IMPORTANT:
-   based on WIDTH, not browser HEIGHT
 ========================================================= */
 
 @media(max-width:390px){
