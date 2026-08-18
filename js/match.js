@@ -28,95 +28,17 @@ const cancelMatchBtn =
    STATE
 ========================= */
 
-let matchCancelled =
-  false;
+let matchCancelled = false;
 
-let allowMatchExit =
-  false;
+let matchFoundStarted = false;
 
+let searchTimer = null;
 
-/* =========================
-   BLOCK PHONE BACK
-========================= */
+let enterGameTimer = null;
 
-/*
-  Base state ديال match
-*/
+let dotsTimer = null;
 
-history.replaceState(
-  {
-    matchBase:true
-  },
-  "",
-  window.location.href
-);
-
-
-/*
-  Guard state قدامها
-*/
-
-history.pushState(
-  {
-    matchGuard:true
-  },
-  "",
-  window.location.href
-);
-
-
-/*
-  إلا ضغط Back:
-  نرجعوه للـGuard.
-*/
-
-window.addEventListener(
-  "popstate",
-  ()=>{
-
-    if(
-      allowMatchExit
-    ){
-
-      return;
-
-    }
-
-
-    setTimeout(
-      ()=>{
-
-        history.go(1);
-
-      },
-      0
-    );
-
-  }
-);
-
-
-/* =========================
-   CANCEL MATCH
-========================= */
-
-cancelMatchBtn.addEventListener(
-  "click",
-  ()=>{
-
-    allowMatchExit =
-      true;
-
-    matchCancelled =
-      true;
-
-
-    window.location.replace(
-      "home.html"
-    );
-
-  }
-);
+let audioContext = null;
 
 
 /* =========================
@@ -149,9 +71,7 @@ function loadPlayerAvatar(){
 
   catch(error){
 
-    /*
-      Default avatar يبقى.
-    */
+    /* نخليو avatar الافتراضي */
 
   }
 
@@ -164,10 +84,6 @@ loadPlayerAvatar();
 /* =========================
    AUDIO
 ========================= */
-
-let audioContext =
-  null;
-
 
 function getAudio(){
 
@@ -194,8 +110,7 @@ function getAudio(){
 
   if(
     audioContext &&
-    audioContext.state ===
-    "suspended"
+    audioContext.state === "suspended"
   ){
 
     audioContext.resume();
@@ -215,6 +130,15 @@ function tone(
   type,
   delay
 ){
+
+  if(
+    matchCancelled
+  ){
+
+    return;
+
+  }
+
 
   const ctx =
     getAudio();
@@ -263,15 +187,13 @@ function tone(
   gain.gain.exponentialRampToValueAtTime(
     volume ||
     .025,
-    start +
-    .01
+    start + .01
   );
 
 
   gain.gain.exponentialRampToValueAtTime(
     .0001,
-    start +
-    duration
+    start + duration
   );
 
 
@@ -299,11 +221,16 @@ function tone(
 }
 
 
-/* =========================
-   MATCH FOUND SOUND
-========================= */
-
 function playMatchFoundSound(){
+
+  if(
+    matchCancelled
+  ){
+
+    return;
+
+  }
+
 
   tone(
     440,
@@ -335,59 +262,151 @@ function playMatchFoundSound(){
 
 
 /* =========================
-   SEARCH DOTS
+   STOP AUDIO
 ========================= */
 
-let dotCount =
-  1;
+function stopMatchAudio(){
 
+  if(
+    audioContext
+  ){
 
-const dotsTimer =
-  setInterval(
-    ()=>{
+    try{
 
       if(
-        matchCancelled
+        audioContext.state !==
+        "closed"
       ){
 
-        clearInterval(
-          dotsTimer
-        );
-
-        return;
+        audioContext.close();
 
       }
 
+    }
 
-      dotCount++;
-
-
-      if(
-        dotCount >
-        3
-      ){
-
-        dotCount =
-          1;
-
-      }
+    catch(error){}
 
 
-      searchDots.textContent =
-        ".".repeat(
-          dotCount
-        );
+    audioContext =
+      null;
 
-    },
-    330
-  );
+  }
+
+}
 
 
 /* =========================
-   MATCH FOUND
+   SEARCH DOTS
 ========================= */
 
-function matchFound(){
+let dotCount = 1;
+
+
+function startDots(){
+
+  dotsTimer =
+    setInterval(
+      ()=>{
+
+        if(
+          matchCancelled
+        ){
+
+          return;
+
+        }
+
+
+        dotCount++;
+
+
+        if(
+          dotCount > 3
+        ){
+
+          dotCount =
+            1;
+
+        }
+
+
+        searchDots.textContent =
+          ".".repeat(
+            dotCount
+          );
+
+      },
+      330
+    );
+
+}
+
+
+startDots();
+
+
+/* =========================
+   CLEANUP
+========================= */
+
+function cleanupMatch(){
+
+  matchCancelled =
+    true;
+
+
+  if(
+    dotsTimer
+  ){
+
+    clearInterval(
+      dotsTimer
+    );
+
+    dotsTimer =
+      null;
+
+  }
+
+
+  if(
+    searchTimer
+  ){
+
+    clearTimeout(
+      searchTimer
+    );
+
+    searchTimer =
+      null;
+
+  }
+
+
+  if(
+    enterGameTimer
+  ){
+
+    clearTimeout(
+      enterGameTimer
+    );
+
+    enterGameTimer =
+      null;
+
+  }
+
+
+  stopMatchAudio();
+
+}
+
+
+/* =========================
+   CANCEL MATCH
+========================= */
+
+function cancelMatch(){
 
   if(
     matchCancelled
@@ -398,9 +417,90 @@ function matchFound(){
   }
 
 
-  clearInterval(
-    dotsTimer
+  cleanupMatch();
+
+
+  window.location.replace(
+    "home.html"
   );
+
+}
+
+
+/* =========================
+   CANCEL BUTTON
+========================= */
+
+cancelMatchBtn.addEventListener(
+  "click",
+  ()=>{
+
+    cancelMatch();
+
+  }
+);
+
+
+/* =========================
+   PHONE / BROWSER BACK
+========================= */
+
+/*
+  كنزيدو state واحد باش أول Back
+  يبقى داخل الصفحة ونستقبلو popstate.
+*/
+
+history.pushState(
+  {
+    match:true
+  },
+  "",
+  window.location.href
+);
+
+
+window.addEventListener(
+  "popstate",
+  ()=>{
+
+    cancelMatch();
+
+  }
+);
+
+
+/* =========================
+   MATCH FOUND
+========================= */
+
+function matchFound(){
+
+  if(
+    matchCancelled ||
+    matchFoundStarted
+  ){
+
+    return;
+
+  }
+
+
+  matchFoundStarted =
+    true;
+
+
+  if(
+    dotsTimer
+  ){
+
+    clearInterval(
+      dotsTimer
+    );
+
+    dotsTimer =
+      null;
+
+  }
 
 
   scanner.classList.add(
@@ -429,29 +529,62 @@ function matchFound(){
   playMatchFoundSound();
 
 
-  setTimeout(
-    ()=>{
+  enterGameTimer =
+    setTimeout(
+      ()=>{
 
-      if(
-        matchCancelled
-      ){
+        if(
+          matchCancelled
+        ){
 
-        return;
+          return;
 
-      }
-
-
-      allowMatchExit =
-        true;
+        }
 
 
-      window.location.replace(
-        "index.html"
-      );
+        /*
+          ما نديروش cleanupMatch()
+          حيث هادي ماشي cancel.
 
-    },
-    1050
-  );
+          غير نوقفو timers
+          قبل الانتقال.
+        */
+
+        if(
+          dotsTimer
+        ){
+
+          clearInterval(
+            dotsTimer
+          );
+
+          dotsTimer =
+            null;
+
+        }
+
+
+        if(
+          searchTimer
+        ){
+
+          clearTimeout(
+            searchTimer
+          );
+
+          searchTimer =
+            null;
+
+        }
+
+
+        window.location.replace(
+          "index.html"
+        );
+
+      },
+      1050
+    );
 
 }
 
@@ -460,11 +593,42 @@ function matchFound(){
    START SEARCH
 ========================= */
 
-setTimeout(
+searchTimer =
+  setTimeout(
+    ()=>{
+
+      matchFound();
+
+    },
+    2000
+  );
+
+
+/* =========================
+   PAGE CLEANUP
+========================= */
+
+/*
+  إلا الصفحة خرجات لأي سبب،
+  نحبسو كلشي باش ما يبقاش
+  sound ولا timer فالخلفية.
+*/
+
+window.addEventListener(
+  "pagehide",
   ()=>{
 
-    matchFound();
+    cleanupMatch();
 
-  },
-  2000
+  }
+);
+
+
+window.addEventListener(
+  "beforeunload",
+  ()=>{
+
+    cleanupMatch();
+
+  }
 );
