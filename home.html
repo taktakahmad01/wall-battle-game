@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+  >
+
+  <title>Wall Battle</title>
+
+  <link rel="stylesheet" href="css/home.css?v=1">
+</head>
+
+<body>
+
+  <main id="homeApp">
+
+    <!-- =========================
+         PLAYER PROFILE
+    ========================== -->
+
+    <section class="profile-card">
+
+      <div class="profile-avatar">
+        <span id="avatarEmoji">😎</span>
+
+        <span class="online-dot"></span>
+      </div>
+
+      <div class="profile-info">
+
+        <div class="profile-name" id="playerName">
+          Player
+        </div>
+
+        <div class="profile-meta">
+
+          <span id="countryFlag">
+            🇲🇦
+          </span>
+
+          <span id="countryName">
+            Morocco
+          </span>
+
+          <span class="meta-dot">
+            •
+          </span>
+
+          <span class="online-text">
+            Online
+          </span>
+
+        </div>
+
+      </div>
+
+      <div class="wins-box">
+
+        <div class="wins-icon">
+          🏆
+        </div>
+
+        <div>
+
+          <div class="wins-number" id="winsCount">
+            0
+          </div>
+
+          <div class="wins-label">
+            WINS
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =========================
+         LOGO
+    ========================== -->
+
+    <section class="hero">
+
+      <div class="hero-icon">
+        🧱
+      </div>
+
+      <h1>
+        WALL
+        <span>BATTLE</span>
+      </h1>
+
+      <p>
+        Outsmart. Block. Reach the other side.
+      </p>
+
+    </section>
+
+
+    <!-- =========================
+         PLAY ONLINE
+    ========================== -->
+
+    <section class="main-actions">
+
+      <button
+        class="play-online-btn"
+        id="playOnlineBtn"
+        type="button"
+      >
+
+        <span class="btn-icon">
+          ⚔️
+        </span>
+
+        <span class="btn-content">
+
+          <strong>
+            PLAY ONLINE
+          </strong>
+
+          <small>
+            Find an opponent
+          </small>
+
+        </span>
+
+        <span class="btn-arrow">
+          ›
+        </span>
+
+      </button>
+
+
+      <!-- =========================
+           FRIEND MATCH
+      ========================== -->
+
+      <div class="friend-card">
+
+        <div class="friend-title">
+
+          <span>
+            👥
+          </span>
+
+          PLAY WITH A FRIEND
+
+        </div>
+
+
+        <button
+          class="create-code-btn"
+          id="createCodeBtn"
+          type="button"
+        >
+
+          <span>
+            ＋
+          </span>
+
+          CREATE CODE
+
+        </button>
+
+
+        <div class="or-line">
+
+          <span></span>
+
+          <small>
+            OR
+          </small>
+
+          <span></span>
+
+        </div>
+
+
+        <div class="join-row">
+
+          <input
+            id="roomCodeInput"
+            type="text"
+            maxlength="6"
+            autocomplete="off"
+            placeholder="ENTER CODE"
+          >
+
+          <button
+            id="joinCodeBtn"
+            type="button"
+          >
+            JOIN
+          </button>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =========================
+         STATUS
+    ========================== -->
+
+    <div class="home-status" id="homeStatus">
+
+      <span class="status-dot"></span>
+
+      <span>
+        Ready to play
+      </span>
+
+    </div>
+
+  </main>
+
+
+  <script src="js/home.js?v=1"></script>
+
+</body>
+
+</html>
