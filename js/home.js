@@ -876,7 +876,7 @@ function matchFound(){
 
 
         window.location.href =
-          "index.html";
+          "game.html";
 
       },
       1050
