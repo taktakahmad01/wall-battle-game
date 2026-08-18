@@ -3,7 +3,7 @@
 ========================= */
 
 const scanner =
-  document.querySelector(".scanner");
+  document.getElementById("scanner");
 
 const searchAvatar =
   document.getElementById("searchAvatar");
@@ -19,6 +19,67 @@ const searchDots =
 
 const matchSubtext =
   document.getElementById("matchSubtext");
+
+const cancelMatchBtn =
+  document.getElementById("cancelMatchBtn");
+
+
+/* =========================
+   BLOCK BACK BUTTON
+========================= */
+
+history.pushState(
+  {
+    matchPage:true
+  },
+  "",
+  window.location.href
+);
+
+
+window.addEventListener(
+  "popstate",
+  ()=>{
+
+    /*
+      زر الرجوع ديال الهاتف
+      ما يخرجش من Match.
+    */
+
+    history.pushState(
+      {
+        matchPage:true
+      },
+      "",
+      window.location.href
+    );
+
+  }
+);
+
+
+/* =========================
+   CANCEL MATCH
+========================= */
+
+let matchCancelled =
+  false;
+
+
+cancelMatchBtn.addEventListener(
+  "click",
+  ()=>{
+
+    matchCancelled =
+      true;
+
+
+    window.location.replace(
+      "home.html"
+    );
+
+  }
+);
 
 
 /* =========================
@@ -52,8 +113,7 @@ function loadPlayerAvatar(){
   catch(error){
 
     /*
-      إلا ماكانتش data
-      نخليو avatar الافتراضي.
+      Default avatar يبقى.
     */
 
   }
@@ -68,7 +128,8 @@ loadPlayerAvatar();
    AUDIO
 ========================= */
 
-let audioContext = null;
+let audioContext =
+  null;
 
 
 function getAudio(){
@@ -80,7 +141,9 @@ function getAudio(){
       window.webkitAudioContext;
 
 
-    if(AudioContextClass){
+    if(
+      AudioContextClass
+    ){
 
       audioContext =
         new AudioContextClass();
@@ -92,7 +155,8 @@ function getAudio(){
 
   if(
     audioContext &&
-    audioContext.state === "suspended"
+    audioContext.state ===
+    "suspended"
   ){
 
     audioContext.resume();
@@ -138,7 +202,8 @@ function tone(
 
 
   oscillator.type =
-    type || "triangle";
+    type ||
+    "triangle";
 
 
   oscillator.frequency.value =
@@ -146,19 +211,19 @@ function tone(
 
 
   gain.gain.setValueAtTime(
-    0.0001,
+    .0001,
     start
   );
 
 
   gain.gain.exponentialRampToValueAtTime(
-    volume || 0.025,
-    start + 0.01
+    volume || .025,
+    start + .01
   );
 
 
   gain.gain.exponentialRampToValueAtTime(
-    0.0001,
+    .0001,
     start + duration
   );
 
@@ -181,14 +246,14 @@ function tone(
   oscillator.stop(
     start +
     duration +
-    0.04
+    .04
   );
 
 }
 
 
 /* =========================
-   MATCH FOUND SOUND
+   MATCH SOUND
 ========================= */
 
 function playMatchFoundSound(){
@@ -226,7 +291,8 @@ function playMatchFoundSound(){
    SEARCH DOTS
 ========================= */
 
-let dotCount = 1;
+let dotCount =
+  1;
 
 
 const dotsTimer =
@@ -240,7 +306,8 @@ const dotsTimer =
         dotCount > 3
       ){
 
-        dotCount = 1;
+        dotCount =
+          1;
 
       }
 
@@ -260,6 +327,15 @@ const dotsTimer =
 ========================= */
 
 function matchFound(){
+
+  if(
+    matchCancelled
+  ){
+
+    return;
+
+  }
+
 
   clearInterval(
     dotsTimer
@@ -281,7 +357,7 @@ function matchFound(){
   );
 
 
-  searchText.innerHTML =
+  searchText.textContent =
     "MATCH FOUND! ⚔️";
 
 
@@ -292,16 +368,26 @@ function matchFound(){
   playMatchFoundSound();
 
 
-  /*
-    نخلي Animation تبان شوية
-    قبل الدخول للماتش.
-  */
-
   setTimeout(
     ()=>{
 
-      window.location.href =
-        "index.html";
+      if(
+        matchCancelled
+      ){
+
+        return;
+
+      }
+
+
+      /*
+        replace:
+        Match page كتخرج من history.
+      */
+
+      window.location.replace(
+        "index.html"
+      );
 
     },
     1050
@@ -314,16 +400,11 @@ function matchFound(){
    SEARCH
 ========================= */
 
-/*
-  حالياً هادي animation تجريبية:
-  كتقلب تقريباً جوج ثواني.
-
-  من بعد ملي نديرو matchmaking،
-  Firebase هو اللي غادي يقرر
-  إمتى فعلاً تلقى الخصم.
-*/
-
 setTimeout(
-  matchFound,
+  ()=>{
+
+    matchFound();
+
+  },
   2000
 );
