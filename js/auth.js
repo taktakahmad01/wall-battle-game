@@ -149,6 +149,12 @@ const avatarOptions =
   );
 
 
+const genderOptions =
+  document.querySelectorAll(
+    ".gender-option"
+  );
+
+
 const authMessage =
   document.getElementById(
     "authMessage"
@@ -162,11 +168,19 @@ const authMessage =
 let selectedAvatar =
   "😎";
 
+
+/*
+  null = user mazal
+  ma khtar la boy la girl.
+*/
+
 let selectedGender =
-  "boy";
+  null;
+
 
 let authReady =
   false;
+
 
 let creatingAccount =
   false;
@@ -189,13 +203,13 @@ function setMessage(
     "auth-message";
 
 
-  if(type){
+  if(
+    type
+  ){
 
-    authMessage
-      .classList
-      .add(
-        type
-      );
+    authMessage.classList.add(
+      type
+    );
 
   }
 
@@ -295,19 +309,25 @@ function showLogin(){
     "active"
   );
 
+
   createTab.classList.remove(
     "active"
   );
+
 
   loginPanel.classList.remove(
     "hidden"
   );
 
+
   createPanel.classList.add(
     "hidden"
   );
 
-  setMessage("");
+
+  setMessage(
+    ""
+  );
 
 }
 
@@ -318,19 +338,25 @@ function showCreate(){
     "active"
   );
 
+
   loginTab.classList.remove(
     "active"
   );
+
 
   createPanel.classList.remove(
     "hidden"
   );
 
+
   loginPanel.classList.add(
     "hidden"
   );
 
-  setMessage("");
+
+  setMessage(
+    ""
+  );
 
 }
 
@@ -348,7 +374,49 @@ createTab.addEventListener(
 
 
 /* =========================
-   AVATARS
+   GENDER
+========================= */
+
+genderOptions.forEach(
+  button=>{
+
+    button.addEventListener(
+      "click",
+      ()=>{
+
+        genderOptions.forEach(
+          item=>{
+
+            item.classList.remove(
+              "selected"
+            );
+
+          }
+        );
+
+
+        button.classList.add(
+          "selected"
+        );
+
+
+        selectedGender =
+          button.dataset.gender;
+
+
+        setMessage(
+          ""
+        );
+
+      }
+    );
+
+  }
+);
+
+
+/* =========================
+   AVATAR
 ========================= */
 
 avatarOptions.forEach(
@@ -376,10 +444,6 @@ avatarOptions.forEach(
 
         selectedAvatar =
           button.dataset.avatar;
-
-
-        selectedGender =
-          button.dataset.gender;
 
       }
     );
@@ -458,7 +522,23 @@ createAccountBtn.addEventListener(
       "";
 
 
-    /* VALIDATION */
+    /* =========================
+       VALIDATION
+    ========================== */
+
+    if(
+      !selectedGender
+    ){
+
+      setMessage(
+        "Choose BOY or GIRL.",
+        "error"
+      );
+
+      return;
+
+    }
+
 
     if(
       !validUsername(
@@ -526,13 +606,9 @@ createAccountBtn.addEventListener(
 
     try{
 
-      /*
-        1) CREATE AUTH FIRST
-
-        Username هو email داخلي.
-        إلا username موجود، Firebase Auth
-        غادي يرفض هنا مباشرة.
-      */
+      /* =========================
+         CREATE FIREBASE AUTH
+      ========================== */
 
       const email =
         usernameToEmail(
@@ -556,10 +632,9 @@ createAccountBtn.addEventListener(
         createdUser.uid;
 
 
-      /*
-        2) CREATE USERNAME + PROFILE
-           IN ONE FIRESTORE TRANSACTION
-      */
+      /* =========================
+         FIRESTORE PROFILE
+      ========================== */
 
       await runTransaction(
         db,
@@ -572,11 +647,6 @@ createAccountBtn.addEventListener(
               usernameLower
             );
 
-
-          /*
-            دابا user authenticated،
-            لذلك هاد read مسموح.
-          */
 
           const usernameSnapshot =
             await transaction.get(
@@ -623,6 +693,12 @@ createAccountBtn.addEventListener(
 
               avatar:
                 selectedAvatar,
+
+              /*
+                Daba gender
+                user khtarha
+                b wa7do.
+              */
 
               gender:
                 selectedGender,
@@ -689,9 +765,10 @@ createAccountBtn.addEventListener(
 
 
       /*
-        إلا Auth account تخلق ولكن
-        Firestore فشل، نحيد account
-        باش ما يبقاش عندنا compte ناقص.
+        Ila Auth tkhlaq
+        w Firestore fail,
+        nms7o Auth bach
+        mayb9ach account na9s.
       */
 
       if(
@@ -760,7 +837,7 @@ createAccountBtn.addEventListener(
       ){
 
         setMessage(
-          "Database permission denied. Check Firestore rules.",
+          "Database permission denied.",
           "error"
         );
 
@@ -935,8 +1012,7 @@ loginPassword.addEventListener(
   event=>{
 
     if(
-      event.key ===
-      "Enter"
+      event.key === "Enter"
     ){
 
       loginBtn.click();
@@ -956,8 +1032,7 @@ createPassword.addEventListener(
   event=>{
 
     if(
-      event.key ===
-      "Enter"
+      event.key === "Enter"
     ){
 
       createAccountBtn.click();
@@ -979,11 +1054,6 @@ onAuthStateChanged(
     authReady =
       true;
 
-
-    /*
-      أثناء create account ما ندوزوش
-      مباشرة Home حتى يكمل Firestore.
-    */
 
     if(
       user &&
