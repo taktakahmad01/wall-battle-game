@@ -11,30 +11,37 @@
 
   <title>Wall Battle</title>
 
-  <link rel="stylesheet" href="css/home.css?v=2">
+  <link rel="stylesheet" href="css/home.css">
 </head>
 
 <body>
 
   <main id="homeApp">
 
-    <!-- =========================
-         PLAYER PROFILE
-    ========================== -->
+    <!-- PROFILE -->
 
     <section class="profile-card">
 
       <div class="profile-avatar">
-        <span id="avatarEmoji">😎</span>
+
+        <span id="avatarEmoji">
+          😎
+        </span>
 
         <span class="online-dot"></span>
+
       </div>
+
 
       <div class="profile-info">
 
-        <div class="profile-name" id="playerName">
+        <div
+          class="profile-name"
+          id="playerName"
+        >
           Player
         </div>
+
 
         <div class="profile-meta">
 
@@ -58,6 +65,7 @@
 
       </div>
 
+
       <div class="wins-box">
 
         <div class="wins-icon">
@@ -66,7 +74,10 @@
 
         <div>
 
-          <div class="wins-number" id="winsCount">
+          <div
+            class="wins-number"
+            id="winsCount"
+          >
             0
           </div>
 
@@ -81,9 +92,7 @@
     </section>
 
 
-    <!-- =========================
-         LOGO
-    ========================== -->
+    <!-- HERO -->
 
     <section class="hero">
 
@@ -103,9 +112,7 @@
     </section>
 
 
-    <!-- =========================
-         PLAY ONLINE
-    ========================== -->
+    <!-- ACTIONS -->
 
     <section class="main-actions">
 
@@ -137,10 +144,6 @@
 
       </button>
 
-
-      <!-- =========================
-           FRIEND MATCH
-      ========================== -->
 
       <div class="friend-card">
 
@@ -207,11 +210,10 @@
     </section>
 
 
-    <!-- =========================
-         STATUS
-    ========================== -->
-
-    <div class="home-status" id="homeStatus">
+    <div
+      class="home-status"
+      id="homeStatus"
+    >
 
       <span class="status-dot"></span>
 
@@ -224,7 +226,85 @@
   </main>
 
 
-  <script src="js/home.js?v=3"></script>
+  <!-- =========================
+       MATCH OVERLAY
+  ========================== -->
+
+  <div
+    class="match-overlay hidden"
+    id="matchOverlay"
+  >
+
+    <button
+      class="match-cancel"
+      id="matchCancelBtn"
+      type="button"
+    >
+      ✕ CANCEL
+    </button>
+
+
+    <div class="match-overlay-card">
+
+      <div class="match-overlay-title">
+        FINDING OPPONENT
+      </div>
+
+
+      <div
+        class="match-scanner"
+        id="matchScanner"
+      >
+
+        <div class="match-ring ring-a"></div>
+
+        <div class="match-ring ring-b"></div>
+
+        <div class="match-ring ring-c"></div>
+
+        <div class="match-scan-light"></div>
+
+
+        <div
+          class="match-avatar"
+          id="matchAvatar"
+        >
+          😎
+        </div>
+
+
+        <div
+          class="match-found-badge"
+          id="matchFoundBadge"
+        >
+          ⚔️
+        </div>
+
+      </div>
+
+
+      <div
+        class="match-search-text"
+        id="matchSearchText"
+      >
+        SEARCHING
+        <span id="matchDots">.</span>
+      </div>
+
+
+      <div
+        class="match-subtext"
+        id="matchSubtext"
+      >
+        Looking for a player
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <script src="js/home.js"></script>
 
 </body>
 
