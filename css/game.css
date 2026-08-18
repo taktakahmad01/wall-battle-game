@@ -1,28 +1,58 @@
+/* =========================================================
+   RESET
+========================================================= */
+
 *{
   box-sizing:border-box;
   margin:0;
   padding:0;
+
+  -webkit-tap-highlight-color:transparent;
+
   user-select:none;
   -webkit-user-select:none;
-  -webkit-tap-highlight-color:transparent;
 }
 
-html,
-body{
-  width:100%;
-  min-height:100%;
+:root{
+
+  --page-padding:12px;
+
+  --content-width:
+    min(
+      calc(100vw - 24px),
+      520px
+    );
+
+  --board-width:
+    min(
+      calc(100vw - 28px),
+      510px
+    );
+
 }
 
 html{
+  width:100%;
+  min-height:100%;
+
   background:#07101b;
+
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
 }
 
 body{
-  min-height:100dvh;
+  width:100%;
+  min-height:100%;
+
   overflow-x:hidden;
   overflow-y:auto;
 
-  font-family:Arial,sans-serif;
+  font-family:
+    Arial,
+    Helvetica,
+    sans-serif;
+
   color:#fff;
 
   background:
@@ -36,52 +66,66 @@ body{
 
 button{
   border:0;
+  outline:0;
+
   font:inherit;
+
   cursor:pointer;
+
+  touch-action:manipulation;
 }
+
+
+/* =========================================================
+   APP
+========================================================= */
 
 #app{
   width:100%;
-  min-height:100dvh;
+
+  min-height:100vh;
+  min-height:100svh;
 
   display:flex;
   flex-direction:column;
 
+  align-items:center;
+
+  overflow:visible;
+
   padding-top:
     max(
-      4px,
+      6px,
       env(safe-area-inset-top)
     );
 
   padding-bottom:
     max(
-      8px,
+      10px,
       env(safe-area-inset-bottom)
     );
 }
 
 
-/* =========================
-   BOT
-========================= */
+/* =========================================================
+   BOT ZONE
+========================================================= */
 
 .bot-zone{
-  flex-shrink:0;
+  width:100%;
+
+  flex:none;
 
   padding:
     7px
-    12px
+    var(--page-padding)
     0;
 }
 
 .bot-card{
-  width:
-    min(
-      calc(100vw - 24px),
-      520px
-    );
+  width:var(--content-width);
 
-  margin:auto;
+  margin:0 auto;
 
   padding:
     9px
@@ -91,7 +135,7 @@ button{
 
   grid-template-columns:
     auto
-    1fr
+    minmax(0,1fr)
     auto;
 
   align-items:center;
@@ -124,6 +168,7 @@ button{
 }
 
 .bot-card.active{
+
   background:
     rgba(
       255,
@@ -149,6 +194,8 @@ button{
   width:38px;
   height:38px;
 
+  flex:none;
+
   border-radius:50%;
 
   background:
@@ -171,6 +218,9 @@ button{
 
 .bot-name{
   font-size:14px;
+
+  line-height:1.1;
+
   font-weight:900;
 }
 
@@ -180,8 +230,16 @@ button{
   color:#94a5ba;
 
   font-size:10px;
+
+  line-height:1.2;
+
   font-weight:700;
 }
+
+
+/* =========================================================
+   WALL COUNT
+========================================================= */
 
 .wall-count{
   display:flex;
@@ -190,7 +248,12 @@ button{
 
   gap:7px;
 
+  white-space:nowrap;
+
   font-size:23px;
+
+  line-height:1;
+
   font-weight:900;
 }
 
@@ -204,15 +267,20 @@ button{
 
 .wall-icon{
   font-size:20px;
+
+  line-height:1;
 }
 
 
-/* =========================
+/* =========================================================
    ENERGY
-========================= */
+========================================================= */
 
 .bot-energy-space{
+  width:100%;
   height:40px;
+
+  flex:none;
 
   display:flex;
 
@@ -221,9 +289,10 @@ button{
 }
 
 .player-energy-space{
-  flex-shrink:0;
+  width:100%;
+  height:42px;
 
-  height:39px;
+  flex:none;
 
   display:flex;
 
@@ -259,6 +328,7 @@ button{
 }
 
 .player-energy.holding{
+
   background:
     rgba(
       73,
@@ -275,6 +345,8 @@ button{
   width:28px;
   height:28px;
 
+  flex:none;
+
   display:flex;
 
   align-items:center;
@@ -284,6 +356,8 @@ button{
 
   font-size:15px;
 
+  line-height:1;
+
   transition:
     transform .18s ease,
     opacity .18s ease,
@@ -291,6 +365,7 @@ button{
 }
 
 .bot-energy .energy{
+
   color:#fff4bd;
 
   background:
@@ -313,6 +388,7 @@ button{
 }
 
 .player-energy .energy{
+
   color:#fff;
 
   background:
@@ -335,6 +411,7 @@ button{
 }
 
 .energy.used{
+
   opacity:.18;
 
   filter:
@@ -359,18 +436,15 @@ button{
 @keyframes energyConsume{
 
   0%{
-    transform:
-      scale(1);
+    transform:scale(1);
   }
 
   40%{
-    transform:
-      scale(1.30);
+    transform:scale(1.30);
   }
 
   100%{
-    transform:
-      scale(.82);
+    transform:scale(.82);
   }
 
 }
@@ -378,6 +452,7 @@ button{
 @keyframes holdFade{
 
   0%{
+
     opacity:1;
 
     transform:
@@ -388,6 +463,7 @@ button{
   }
 
   100%{
+
     opacity:.18;
 
     transform:
@@ -401,14 +477,14 @@ button{
 }
 
 
-/* =========================
-   BOARD
-========================= */
+/* =========================================================
+   GAME MIDDLE
+========================================================= */
 
 .game-middle{
   width:100%;
 
-  flex:1 0 auto;
+  flex:none;
 
   display:flex;
 
@@ -420,31 +496,31 @@ button{
     0;
 }
 
+
+/* =========================================================
+   BOARD
+========================================================= */
+
 #board{
   position:relative;
 
-  width:
-    min(
-      calc(100vw - 28px),
-      510px
-    );
+  width:var(--board-width);
+  height:var(--board-width);
 
-  aspect-ratio:1 / 1;
-
-  flex-shrink:0;
+  flex:none;
 
   display:grid;
 
   grid-template-columns:
     repeat(
       9,
-      1fr
+      minmax(0,1fr)
     );
 
   grid-template-rows:
     repeat(
       9,
-      1fr
+      minmax(0,1fr)
     );
 
   gap:4px;
@@ -480,8 +556,13 @@ button{
 .cell{
   position:relative;
 
+  width:100%;
+  height:100%;
+
   min-width:0;
   min-height:0;
+
+  overflow:hidden;
 
   border-radius:8px;
 
@@ -503,6 +584,7 @@ button{
 }
 
 .cell.goal-top{
+
   background:
     linear-gradient(
       145deg,
@@ -517,6 +599,7 @@ button{
 }
 
 .cell.goal-bottom{
+
   background:
     linear-gradient(
       145deg,
@@ -531,16 +614,20 @@ button{
 }
 
 
-/* =========================
-   LAYERS
-========================= */
+/* =========================================================
+   BOARD LAYERS
+========================================================= */
 
 #wallLayer,
 #pawnLayer,
 #slotLayer{
+
   position:absolute;
 
   inset:0;
+
+  width:100%;
+  height:100%;
 
   pointer-events:none;
 }
@@ -558,15 +645,15 @@ button{
 }
 
 
-/* =========================
+/* =========================================================
    PAWNS
-========================= */
+========================================================= */
 
 .pawn{
   position:absolute;
 
   width:7%;
-  aspect-ratio:1;
+  aspect-ratio:1 / 1;
 
   transform:
     translate(
@@ -614,6 +701,7 @@ button{
 }
 
 .pawn.blue{
+
   background:
     radial-gradient(
       circle at 35% 28%,
@@ -624,6 +712,7 @@ button{
 }
 
 .pawn.red{
+
   background:
     radial-gradient(
       circle at 35% 28%,
@@ -634,11 +723,13 @@ button{
 }
 
 .pawn::after{
+
   content:"";
 
   position:absolute;
 
   width:36%;
+
   aspect-ratio:1;
 
   left:32%;
@@ -684,6 +775,7 @@ button{
 @keyframes finalPawn{
 
   0%{
+
     scale:1;
 
     filter:
@@ -691,6 +783,7 @@ button{
   }
 
   35%{
+
     scale:1.48;
 
     filter:
@@ -702,6 +795,7 @@ button{
   }
 
   100%{
+
     scale:1.20;
 
     filter:
@@ -711,6 +805,7 @@ button{
 }
 
 #board.blue-finish{
+
   box-shadow:
     0 0 0 2px
     rgba(
@@ -729,6 +824,7 @@ button{
 }
 
 #board.red-finish{
+
   box-shadow:
     0 0 0 2px
     rgba(
@@ -759,6 +855,7 @@ button{
 @keyframes goalBlue{
 
   from{
+
     background:
       rgba(
         48,
@@ -769,6 +866,7 @@ button{
   }
 
   to{
+
     background:
       rgba(
         91,
@@ -783,6 +881,7 @@ button{
 @keyframes goalRed{
 
   from{
+
     background:
       rgba(
         255,
@@ -793,6 +892,7 @@ button{
   }
 
   to{
+
     background:
       rgba(
         255,
@@ -805,9 +905,9 @@ button{
 }
 
 
-/* =========================
+/* =========================================================
    WALLS
-========================= */
+========================================================= */
 
 .wall{
   position:absolute;
@@ -829,6 +929,7 @@ button{
 }
 
 .wall.blue-wall{
+
   background:
     linear-gradient(
       90deg,
@@ -857,6 +958,7 @@ button{
 }
 
 .wall.red-wall{
+
   background:
     linear-gradient(
       90deg,
@@ -885,6 +987,7 @@ button{
 }
 
 .wall.horizontal{
+
   height:9px;
 
   transform:
@@ -894,6 +997,7 @@ button{
 }
 
 .wall.vertical{
+
   width:9px;
 
   transform:
@@ -915,6 +1019,7 @@ button{
 @keyframes newWallH{
 
   from{
+
     opacity:.2;
 
     transform:
@@ -927,6 +1032,7 @@ button{
   }
 
   to{
+
     opacity:1;
 
     transform:
@@ -943,6 +1049,7 @@ button{
 @keyframes newWallV{
 
   from{
+
     opacity:.2;
 
     transform:
@@ -955,6 +1062,7 @@ button{
   }
 
   to{
+
     opacity:1;
 
     transform:
@@ -969,9 +1077,9 @@ button{
 }
 
 
-/* =========================
+/* =========================================================
    WALL ANCHORS
-========================= */
+========================================================= */
 
 .wall-anchor{
   position:absolute;
@@ -1023,6 +1131,7 @@ button{
 }
 
 .wall-anchor::after{
+
   content:"";
 
   position:absolute;
@@ -1052,6 +1161,7 @@ button{
 }
 
 .wall-anchor:active{
+
   transform:
     translate(
       -50%,
@@ -1069,12 +1179,14 @@ button{
 }
 
 
-/* =========================
-   PLAYER
-========================= */
+/* =========================================================
+   PLAYER ZONE
+========================================================= */
 
 .player-zone{
-  flex-shrink:0;
+  width:100%;
+
+  flex:none;
 
   padding:
     0
@@ -1088,13 +1200,9 @@ button{
 }
 
 .player-card{
-  width:
-    min(
-      calc(100vw - 20px),
-      520px
-    );
+  width:var(--content-width);
 
-  margin:auto;
+  margin:0 auto;
 
   padding:7px;
 
@@ -1124,6 +1232,7 @@ button{
 }
 
 .player-card.active{
+
   background:
     rgba(
       57,
@@ -1150,7 +1259,7 @@ button{
 
   grid-template-columns:
     auto
-    1fr
+    minmax(0,1fr)
     auto;
 
   align-items:center;
@@ -1163,6 +1272,8 @@ button{
 .player-dot{
   width:34px;
   height:34px;
+
+  flex:none;
 
   border-radius:50%;
 
@@ -1186,6 +1297,9 @@ button{
 
 .player-name{
   font-size:12px;
+
+  line-height:1.1;
+
   font-weight:900;
 }
 
@@ -1195,13 +1309,16 @@ button{
   color:#8fa2b8;
 
   font-size:9px;
+
+  line-height:1.2;
+
   font-weight:700;
 }
 
 
-/* =========================
-   CONTROLS
-========================= */
+/* =========================================================
+   PLAYER STAGE
+========================================================= */
 
 .player-stage{
   width:100%;
@@ -1210,11 +1327,13 @@ button{
 }
 
 .controls-panel{
+  width:100%;
+
   display:grid;
 
   grid-template-columns:
-    1fr
-    1fr;
+    minmax(0,1fr)
+    minmax(0,1fr);
 
   gap:8px;
 
@@ -1224,6 +1343,7 @@ button{
 }
 
 .controls-panel.disabled-view{
+
   opacity:.35;
 
   pointer-events:none;
@@ -1231,6 +1351,9 @@ button{
 
 .move-panel,
 .wall-panel{
+
+  min-width:0;
+
   padding:6px;
 
   border-radius:18px;
@@ -1254,6 +1377,7 @@ button{
 }
 
 .panel-title{
+
   margin-bottom:4px;
 
   text-align:center;
@@ -1261,20 +1385,25 @@ button{
   color:#72859d;
 
   font-size:8px;
+
+  line-height:1;
+
   font-weight:900;
 
   letter-spacing:1px;
 }
 
 
-/* =========================
-   D-PAD
-========================= */
+/* =========================================================
+   D PAD
+========================================================= */
 
 .dpad{
   width:130px;
 
-  margin:auto;
+  max-width:100%;
+
+  margin:0 auto;
 
   display:grid;
 
@@ -1296,11 +1425,17 @@ button{
 }
 
 .move-btn{
+  width:41px;
+  height:41px;
+
   border-radius:12px;
 
   color:#fff;
 
   font-size:18px;
+
+  line-height:1;
+
   font-weight:900;
 
   background:
@@ -1321,8 +1456,7 @@ button{
 }
 
 .move-btn:active{
-  transform:
-    scale(.86);
+  transform:scale(.86);
 }
 
 .move-btn:disabled{
@@ -1361,20 +1495,30 @@ button{
 }
 
 
-/* =========================
-   WALL CONTROL
-========================= */
+/* =========================================================
+   WALL CONTROLS
+========================================================= */
 
 .wall-main{
   width:100%;
   height:50px;
+
+  display:flex;
+
+  align-items:center;
+  justify-content:center;
 
   border-radius:14px;
 
   color:#fff;
 
   font-size:11px;
+
+  line-height:1;
+
   font-weight:900;
+
+  white-space:nowrap;
 
   background:
     linear-gradient(
@@ -1385,6 +1529,7 @@ button{
 }
 
 .wall-main.active{
+
   box-shadow:
     0 0 0 3px
     rgba(
@@ -1405,26 +1550,36 @@ button{
   display:grid;
 
   grid-template-columns:
-    1fr
-    1fr;
+    minmax(0,1fr)
+    minmax(0,1fr);
 
   gap:6px;
 }
 
 .orientation-btn{
+  width:100%;
   height:45px;
+
+  display:flex;
+
+  align-items:center;
+  justify-content:center;
 
   border-radius:12px;
 
   color:#8293a8;
 
   font-size:19px;
+
+  line-height:1;
+
   font-weight:900;
 
   background:#1c3149;
 }
 
 .orientation-btn.selected{
+
   color:#ffda72;
 
   background:
@@ -1450,9 +1605,9 @@ button{
 }
 
 
-/* =========================
+/* =========================================================
    RESULT
-========================= */
+========================================================= */
 
 .overlay{
   position:fixed;
@@ -1475,6 +1630,9 @@ button{
       19,
       .90
     );
+
+  -webkit-backdrop-filter:
+    blur(9px);
 
   backdrop-filter:
     blur(9px);
@@ -1515,6 +1673,7 @@ button{
 @keyframes resultIn{
 
   from{
+
     opacity:0;
 
     transform:
@@ -1522,11 +1681,13 @@ button{
   }
 
   70%{
+
     transform:
       scale(1.07);
   }
 
   to{
+
     opacity:1;
 
     transform:
@@ -1543,6 +1704,7 @@ button{
   margin-top:16px;
 
   font-size:28px;
+
   font-weight:900;
 }
 
@@ -1565,6 +1727,7 @@ button{
   color:#fff;
 
   font-size:16px;
+
   font-weight:900;
 
   background:
@@ -1576,35 +1739,51 @@ button{
 }
 
 
-/* =========================
-   MEDIUM / SMALL PHONE
-========================= */
+/* =========================================================
+   SMALL WIDTH PHONE
+   IMPORTANT:
+   based on WIDTH, not browser HEIGHT
+========================================================= */
 
-@media(
-  max-width:380px
-){
+@media(max-width:390px){
 
-  .bot-zone{
-    padding-left:8px;
-    padding-right:8px;
-  }
+  :root{
 
-  .bot-card{
-    width:
+    --page-padding:8px;
+
+    --content-width:
       calc(
         100vw - 16px
       );
-  }
 
-  #board{
-    width:
+    --board-width:
       calc(
         100vw - 20px
       );
 
+  }
+
+  .bot-card{
+    padding:
+      7px
+      9px;
+  }
+
+  .bot-dot{
+    width:34px;
+    height:34px;
+  }
+
+  .wall-count{
+    font-size:21px;
+  }
+
+  #board{
     gap:3px;
 
     padding:6px;
+
+    border-radius:22px;
   }
 
   .player-zone{
@@ -1613,134 +1792,132 @@ button{
   }
 
   .player-card{
-    width:
-      calc(
-        100vw - 14px
-      );
+    padding:6px;
   }
 
-  .dpad{
-    transform:
-      scale(.92);
-
-    margin-top:-5px;
-    margin-bottom:-5px;
-  }
-
-}
-
-
-/* =========================
-   SHORT SCREEN
-========================= */
-
-@media(
-  max-height:740px
-){
-
-  .bot-zone{
-    padding-top:3px;
-  }
-
-  .bot-card{
-    padding:
-      6px
-      9px;
-  }
-
-  .bot-dot{
-    width:31px;
-    height:31px;
-  }
-
-  .bot-energy-space{
-    height:29px;
-  }
-
-  .energy{
-    width:23px;
-    height:23px;
-
-    font-size:12px;
-  }
-
-  .player-energy-space{
-    height:29px;
-  }
-
-  .player-header{
-    margin-bottom:2px;
-  }
-
-  .player-dot{
-    width:29px;
-    height:29px;
-  }
-
-  .player-stage{
-    min-height:145px;
+  .controls-panel{
+    gap:6px;
   }
 
   .move-panel,
   .wall-panel{
-    padding:4px;
-  }
-
-  .dpad{
-    transform:
-      scale(.85);
-
-    margin-top:-9px;
-    margin-bottom:-9px;
-  }
-
-  .wall-main{
-    height:42px;
-  }
-
-  .orientation-btn{
-    height:36px;
+    padding:5px;
   }
 
 }
 
 
-/* =========================
-   VERY SHORT SCREEN
-========================= */
+/* =========================================================
+   VERY SMALL WIDTH
+========================================================= */
 
-@media(
-  max-height:650px
-){
+@media(max-width:350px){
 
-  .bot-energy-space{
-    height:24px;
+  :root{
+
+    --board-width:
+      calc(
+        100vw - 14px
+      );
+
   }
 
-  .player-energy-space{
-    height:25px;
+  #board{
+    gap:3px;
+
+    padding:5px;
   }
 
-  .player-stage{
-    min-height:132px;
+  .controls-panel{
+    grid-template-columns:
+      1fr
+      1fr;
   }
 
   .dpad{
-    transform:
-      scale(.78);
+    width:112px;
 
-    margin-top:-13px;
-    margin-bottom:-13px;
+    grid-template-columns:
+      repeat(
+        3,
+        35px
+      );
+
+    grid-template-rows:
+      repeat(
+        3,
+        35px
+      );
+  }
+
+  .move-btn{
+    width:35px;
+    height:35px;
+
+    font-size:16px;
+  }
+
+  .player-stage{
+    min-height:137px;
   }
 
   .wall-main{
-    height:38px;
+    height:43px;
 
-    font-size:10px;
+    font-size:9px;
   }
 
   .orientation-btn{
-    height:33px;
+    height:39px;
+  }
+
+}
+
+
+/* =========================================================
+   TABLET / DESKTOP
+========================================================= */
+
+@media(min-width:700px){
+
+  #app{
+    padding-top:14px;
+    padding-bottom:18px;
+  }
+
+  .bot-zone{
+    padding-top:10px;
+  }
+
+  .bot-energy-space{
+    height:45px;
+  }
+
+  .player-energy-space{
+    height:45px;
+  }
+
+}
+
+
+/* =========================================================
+   LANDSCAPE
+========================================================= */
+
+@media(
+  orientation:landscape
+)
+and
+(max-height:600px){
+
+  body{
+    overflow-y:auto;
+  }
+
+  #app{
+    min-height:auto;
+
+    padding-bottom:20px;
   }
 
 }
