@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+  >
+
+  <title>Wall Battle - Account</title>
+
+  <link
+    rel="stylesheet"
+    href="css/auth.css?v=1"
+  >
+</head>
+
+<body>
+
+  <main id="authApp">
+
+    <section class="auth-shell">
+
+      <div class="auth-brand">
+
+        <div class="auth-logo">
+          🧱
+        </div>
+
+        <h1>
+          WALL
+          <span>BATTLE</span>
+        </h1>
+
+        <p>
+          Create your player account
+        </p>
+
+      </div>
+
+
+      <div class="auth-tabs">
+
+        <button
+          class="auth-tab active"
+          id="loginTab"
+          type="button"
+        >
+          LOGIN
+        </button>
+
+        <button
+          class="auth-tab"
+          id="createTab"
+          type="button"
+        >
+          CREATE ACCOUNT
+        </button>
+
+      </div>
+
+
+      <!-- =========================
+           LOGIN
+      ========================== -->
+
+      <section
+        class="auth-panel"
+        id="loginPanel"
+      >
+
+        <div class="field-group">
+
+          <label for="loginUsername">
+            USERNAME
+          </label>
+
+          <input
+            id="loginUsername"
+            type="text"
+            maxlength="16"
+            autocomplete="username"
+            placeholder="Enter username"
+          >
+
+        </div>
+
+
+        <div class="field-group">
+
+          <label for="loginPassword">
+            PASSWORD
+          </label>
+
+          <input
+            id="loginPassword"
+            type="password"
+            minlength="6"
+            maxlength="64"
+            autocomplete="current-password"
+            placeholder="Enter password"
+          >
+
+        </div>
+
+
+        <button
+          class="main-auth-btn"
+          id="loginBtn"
+          type="button"
+        >
+          LOGIN
+        </button>
+
+      </section>
+
+
+      <!-- =========================
+           CREATE ACCOUNT
+      ========================== -->
+
+      <section
+        class="auth-panel hidden"
+        id="createPanel"
+      >
+
+        <div class="section-label">
+          CHOOSE AVATAR
+        </div>
+
+
+        <div
+          class="avatar-grid"
+          id="avatarGrid"
+        >
+
+          <button
+            class="avatar-option selected"
+            type="button"
+            data-avatar="😎"
+            data-gender="boy"
+          >
+            😎
+          </button>
+
+          <button
+            class="avatar-option"
+            type="button"
+            data-avatar="🧢"
+            data-gender="boy"
+          >
+            🧢
+          </button>
+
+          <button
+            class="avatar-option"
+            type="button"
+            data-avatar="👦"
+            data-gender="boy"
+          >
+            👦
+          </button>
+
+          <button
+            class="avatar-option"
+            type="button"
+            data-avatar="🕶️"
+            data-gender="boy"
+          >
+            🕶️
+          </button>
+
+          <button
+            class="avatar-option"
+            type="button"
+            data-avatar="👧"
+            data-gender="girl"
+          >
+            👧
+          </button>
+
+          <button
+            class="avatar-option"
+            type="button"
+            data-avatar="🎀"
+            data-gender="girl"
+          >
+            🎀
+          </button>
+
+          <button
+            class="avatar-option"
+            type="button"
+            data-avatar="🌸"
+            data-gender="girl"
+          >
+            🌸
+          </button>
+
+          <button
+            class="avatar-option"
+            type="button"
+            data-avatar="✨"
+            data-gender="girl"
+          >
+            ✨
+          </button>
+
+        </div>
+
+
+        <div class="field-group">
+
+          <label for="createUsername">
+            USERNAME
+          </label>
+
+          <input
+            id="createUsername"
+            type="text"
+            maxlength="16"
+            autocomplete="username"
+            placeholder="3 - 16 characters"
+          >
+
+        </div>
+
+
+        <div class="field-group">
+
+          <label for="createPassword">
+            PASSWORD
+          </label>
+
+          <input
+            id="createPassword"
+            type="password"
+            minlength="6"
+            maxlength="64"
+            autocomplete="new-password"
+            placeholder="Minimum 6 characters"
+          >
+
+        </div>
+
+
+        <div class="field-group">
+
+          <label for="countrySelect">
+            COUNTRY
+          </label>
+
+          <select id="countrySelect">
+
+            <option value="">
+              Choose country
+            </option>
+
+            <option
+              value="MA"
+              data-name="Morocco"
+              data-flag="🇲🇦"
+            >
+              🇲🇦 Morocco
+            </option>
+
+            <option
+              value="DZ"
+              data-name="Algeria"
+              data-flag="🇩🇿"
+            >
+              🇩🇿 Algeria
+            </option>
+
+            <option
+              value="TN"
+              data-name="Tunisia"
+              data-flag="🇹🇳"
+            >
+              🇹🇳 Tunisia
+            </option>
+
+            <option
+              value="FR"
+              data-name="France"
+              data-flag="🇫🇷"
+            >
+              🇫🇷 France
+            </option>
+
+            <option
+              value="ES"
+              data-name="Spain"
+              data-flag="🇪🇸"
+            >
+              🇪🇸 Spain
+            </option>
+
+            <option
+              value="BE"
+              data-name="Belgium"
+              data-flag="🇧🇪"
+            >
+              🇧🇪 Belgium
+            </option>
+
+            <option
+              value="NL"
+              data-name="Netherlands"
+              data-flag="🇳🇱"
+            >
+              🇳🇱 Netherlands
+            </option>
+
+            <option
+              value="DE"
+              data-name="Germany"
+              data-flag="🇩🇪"
+            >
+              🇩🇪 Germany
+            </option>
+
+            <option
+              value="GB"
+              data-name="United Kingdom"
+              data-flag="🇬🇧"
+            >
+              🇬🇧 United Kingdom
+            </option>
+
+            <option
+              value="US"
+              data-name="United States"
+              data-flag="🇺🇸"
+            >
+              🇺🇸 United States
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <button
+          class="main-auth-btn create"
+          id="createAccountBtn"
+          type="button"
+        >
+          CREATE ACCOUNT
+        </button>
+
+      </section>
+
+
+      <!-- =========================
+           MESSAGE
+      ========================== -->
+
+      <div
+        class="auth-message"
+        id="authMessage"
+      ></div>
+
+    </section>
+
+  </main>
+
+
+  <script
+    type="module"
+    src="js/auth.js?v=1"
+  ></script>
+
+</body>
+
+</html>
