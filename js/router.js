@@ -1,11 +1,12 @@
 /* =========================
-   FIREBASE
+   FIREBASE IMPORTS
 ========================= */
 
 import {
   initializeApp
 } from
   "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+
 
 import {
   getAuth,
@@ -14,8 +15,16 @@ import {
   "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 
 
+import {
+  getFirestore,
+  doc,
+  getDoc
+} from
+  "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+
 /* =========================
-   CONFIG
+   FIREBASE CONFIG
 ========================= */
 
 const firebaseConfig = {
@@ -49,10 +58,137 @@ const firebaseConfig = {
 ========================= */
 
 const app =
-  initializeApp(firebaseConfig);
+  initializeApp(
+    firebaseConfig
+  );
+
 
 const auth =
-  getAuth(app);
+  getAuth(
+    app
+  );
+
+
+const db =
+  getFirestore(
+    app
+  );
+
+
+/* =========================
+   SAVE PROFILE CACHE
+========================= */
+
+function saveProfileCache(
+  user,
+  data
+){
+
+  try{
+
+    localStorage.setItem(
+      "wallBattlePlayer",
+      JSON.stringify({
+
+        uid:
+          user.uid,
+
+        username:
+          data.username || "",
+
+        avatar:
+          data.avatar || "😎",
+
+        gender:
+          data.gender || "",
+
+        countryCode:
+          data.countryCode || "",
+
+        countryName:
+          data.countryName || "",
+
+        countryFlag:
+          data.countryFlag || "",
+
+        wins:
+          Number(
+            data.wins || 0
+          ),
+
+        losses:
+          Number(
+            data.losses || 0
+          ),
+
+        gamesPlayed:
+          Number(
+            data.gamesPlayed || 0
+          )
+
+      })
+    );
+
+  }
+
+  catch(error){
+
+    console.warn(
+      "PROFILE CACHE ERROR:",
+      error
+    );
+
+  }
+
+}
+
+
+/* =========================
+   LOAD PROFILE
+========================= */
+
+async function loadProfile(
+  user
+){
+
+  const userRef =
+    doc(
+      db,
+      "users",
+      user.uid
+    );
+
+
+  const userSnap =
+    await getDoc(
+      userRef
+    );
+
+
+  if(
+    !userSnap.exists()
+  ){
+
+    throw new Error(
+      "PROFILE_NOT_FOUND"
+    );
+
+  }
+
+
+  const data =
+    userSnap.data();
+
+
+  saveProfileCache(
+    user,
+    data
+  );
+
+
+  return data;
+
+}
 
 
 /* =========================
@@ -61,38 +197,128 @@ const auth =
 
 onAuthStateChanged(
   auth,
-  user => {
+  async user=>{
 
     /*
-      No account/session
+      ما عندوش حساب/session
       → AUTH
     */
 
-    if (!user) {
+    if(
+      !user
+    ){
+
+      try{
+
+        localStorage.removeItem(
+          "wallBattlePlayer"
+        );
+
+      }
+
+      catch(error){}
+
 
       window.location.replace(
         "auth.html"
       );
 
+
       return;
+
     }
 
 
     /*
-      Logged in.
-
-      حالياً نمشيو Home.
-
-      من بعد ملي نصايبو activeGames،
-      هنا غادي نزيدو check:
-
-      active match → game.html
-      no match     → home.html
+      عندو session:
+      Landing كتبقى ظاهرة
+      حتى Firebase profile تجي.
     */
 
-    window.location.replace(
-      "home.html"
-    );
+    try{
+
+      await loadProfile(
+        user
+      );
+
+
+      /*
+        من بعد غادي نزيدو هنا:
+
+        active game ?
+          → game.html
+
+        no active game ?
+          → home.html
+
+        حالياً:
+        → HOME
+      */
+
+      window.location.replace(
+        "home.html"
+      );
+
+    }
+
+    catch(error){
+
+      console.error(
+        "ROUTER PROFILE ERROR:",
+        error
+      );
+
+
+      /*
+        إلا Auth account موجود
+        ولكن profile ما كايناش،
+        ما ندخلوش Home ناقصة.
+      */
+
+      if(
+        error.message ===
+        "PROFILE_NOT_FOUND"
+      ){
+
+        const text =
+          document.querySelector(
+            ".text"
+          );
+
+
+        if(text){
+
+          text.textContent =
+            "Profile not found";
+
+        }
+
+
+        return;
+
+      }
+
+
+      /*
+        مشكل نت أو Firestore:
+        Landing تبقى وما ندخلوش
+        Home ببيانات ناقصة.
+      */
+
+      const text =
+        document.querySelector(
+          ".text"
+        );
+
+
+      if(text){
+
+        text.textContent =
+          "Connecting...";
+
+      }
+
+    }
 
   }
 );
