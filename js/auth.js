@@ -419,38 +419,136 @@ genderOptions.forEach(
    AVATAR
 ========================= */
 
-avatarOptions.forEach(
-  button=>{
+const avatarCurrent =
+  document.getElementById(
+    "avatarCurrent"
+  );
 
-    button.addEventListener(
-      "click",
-      ()=>{
+const avatarPrevBtn =
+  document.getElementById(
+    "avatarPrevBtn"
+  );
 
-        avatarOptions.forEach(
-          item=>{
-
-            item.classList.remove(
-              "selected"
-            );
-
-          }
-        );
+const avatarNextBtn =
+  document.getElementById(
+    "avatarNextBtn"
+  );
 
 
-        button.classList.add(
-          "selected"
-        );
+const avatars = [
+  "😎",
+  "🧢",
+  "👦",
+  "🕶️",
+  "👧",
+  "🎀",
+  "🌸",
+  "✨"
+];
 
 
-        selectedAvatar =
-          button.dataset.avatar;
+let avatarIndex =
+  0;
 
-      }
+
+let selectedAvatar =
+  avatars[
+    avatarIndex
+  ];
+
+
+function animateAvatar(
+  direction
+){
+
+  avatarCurrent.classList.remove(
+    "avatar-from-left",
+    "avatar-from-right"
+  );
+
+
+  void avatarCurrent.offsetWidth;
+
+
+  avatarCurrent.classList.add(
+    direction === "left"
+      ? "avatar-from-left"
+      : "avatar-from-right"
+  );
+
+}
+
+
+function showAvatar(
+  direction
+){
+
+  selectedAvatar =
+    avatars[
+      avatarIndex
+    ];
+
+
+  avatarCurrent.textContent =
+    selectedAvatar;
+
+
+  animateAvatar(
+    direction
+  );
+
+}
+
+
+avatarNextBtn.addEventListener(
+  "click",
+  ()=>{
+
+    avatarIndex++;
+
+
+    if(
+      avatarIndex >=
+      avatars.length
+    ){
+
+      avatarIndex =
+        0;
+
+    }
+
+
+    showAvatar(
+      "right"
     );
 
   }
 );
 
+
+avatarPrevBtn.addEventListener(
+  "click",
+  ()=>{
+
+    avatarIndex--;
+
+
+    if(
+      avatarIndex < 0
+    ){
+
+      avatarIndex =
+        avatars.length - 1;
+
+    }
+
+
+    showAvatar(
+      "left"
+    );
+
+  }
+);
 
 /* =========================
    PERSISTENCE
