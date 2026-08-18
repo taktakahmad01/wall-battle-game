@@ -25,33 +25,71 @@ const cancelMatchBtn =
 
 
 /* =========================
-   BLOCK BACK BUTTON
+   STATE
 ========================= */
 
-history.pushState(
+let matchCancelled =
+  false;
+
+let allowMatchExit =
+  false;
+
+
+/* =========================
+   BLOCK PHONE BACK
+========================= */
+
+/*
+  Base state ديال match
+*/
+
+history.replaceState(
   {
-    matchPage:true
+    matchBase:true
   },
   "",
   window.location.href
 );
 
 
+/*
+  Guard state قدامها
+*/
+
+history.pushState(
+  {
+    matchGuard:true
+  },
+  "",
+  window.location.href
+);
+
+
+/*
+  إلا ضغط Back:
+  نرجعوه للـGuard.
+*/
+
 window.addEventListener(
   "popstate",
   ()=>{
 
-    /*
-      زر الرجوع ديال الهاتف
-      ما يخرجش من Match.
-    */
+    if(
+      allowMatchExit
+    ){
 
-    history.pushState(
-      {
-        matchPage:true
+      return;
+
+    }
+
+
+    setTimeout(
+      ()=>{
+
+        history.go(1);
+
       },
-      "",
-      window.location.href
+      0
     );
 
   }
@@ -62,13 +100,12 @@ window.addEventListener(
    CANCEL MATCH
 ========================= */
 
-let matchCancelled =
-  false;
-
-
 cancelMatchBtn.addEventListener(
   "click",
   ()=>{
+
+    allowMatchExit =
+      true;
 
     matchCancelled =
       true;
@@ -134,7 +171,9 @@ let audioContext =
 
 function getAudio(){
 
-  if(!audioContext){
+  if(
+    !audioContext
+  ){
 
     const AudioContextClass =
       window.AudioContext ||
@@ -181,7 +220,9 @@ function tone(
     getAudio();
 
 
-  if(!ctx){
+  if(
+    !ctx
+  ){
 
     return;
 
@@ -198,7 +239,10 @@ function tone(
 
   const start =
     ctx.currentTime +
-    (delay || 0);
+    (
+      delay ||
+      0
+    );
 
 
   oscillator.type =
@@ -217,14 +261,17 @@ function tone(
 
 
   gain.gain.exponentialRampToValueAtTime(
-    volume || .025,
-    start + .01
+    volume ||
+    .025,
+    start +
+    .01
   );
 
 
   gain.gain.exponentialRampToValueAtTime(
     .0001,
-    start + duration
+    start +
+    duration
   );
 
 
@@ -253,7 +300,7 @@ function tone(
 
 
 /* =========================
-   MATCH SOUND
+   MATCH FOUND SOUND
 ========================= */
 
 function playMatchFoundSound(){
@@ -299,11 +346,25 @@ const dotsTimer =
   setInterval(
     ()=>{
 
+      if(
+        matchCancelled
+      ){
+
+        clearInterval(
+          dotsTimer
+        );
+
+        return;
+
+      }
+
+
       dotCount++;
 
 
       if(
-        dotCount > 3
+        dotCount >
+        3
       ){
 
         dotCount =
@@ -380,10 +441,9 @@ function matchFound(){
       }
 
 
-      /*
-        replace:
-        Match page كتخرج من history.
-      */
+      allowMatchExit =
+        true;
+
 
       window.location.replace(
         "index.html"
@@ -397,7 +457,7 @@ function matchFound(){
 
 
 /* =========================
-   SEARCH
+   START SEARCH
 ========================= */
 
 setTimeout(
