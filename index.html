@@ -6,311 +6,157 @@
 
   <meta
     name="viewport"
-    content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
   >
 
   <title>Wall Battle</title>
 
-  
-  <link rel="stylesheet" href="css/game.css?v=4">
+  <style>
+    *{
+      box-sizing:border-box;
+      margin:0;
+      padding:0;
+    }
+
+    html,
+    body{
+      width:100%;
+      min-height:100%;
+    }
+
+    body{
+      min-height:100vh;
+
+      display:flex;
+      align-items:center;
+      justify-content:center;
+
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+      color:#fff;
+
+      background:
+        radial-gradient(
+          circle at top,
+          #24486d 0%,
+          #101f32 52%,
+          #07101b 100%
+        );
+    }
+
+    .loader{
+      width:100%;
+      max-width:320px;
+
+      padding:30px;
+
+      text-align:center;
+    }
+
+    .logo{
+      font-size:54px;
+    }
+
+    .title{
+      margin-top:12px;
+
+      font-size:25px;
+      font-weight:900;
+    }
+
+    .title span{
+      color:#66aaff;
+    }
+
+    .text{
+      margin-top:10px;
+
+      color:#8297ae;
+
+      font-size:10px;
+      font-weight:700;
+    }
+
+    .dots{
+      margin-top:18px;
+
+      display:flex;
+      justify-content:center;
+
+      gap:7px;
+    }
+
+    .dot{
+      width:8px;
+      height:8px;
+
+      border-radius:50%;
+
+      background:#65aaff;
+
+      animation:
+        pulse 1s ease-in-out infinite;
+    }
+
+    .dot:nth-child(2){
+      animation-delay:.15s;
+    }
+
+    .dot:nth-child(3){
+      animation-delay:.30s;
+    }
+
+    @keyframes pulse{
+
+      0%,
+      100%{
+        opacity:.25;
+        transform:scale(.75);
+      }
+
+      50%{
+        opacity:1;
+        transform:scale(1.15);
+      }
+
+    }
+  </style>
 </head>
 
 <body>
 
-<div id="app">
+  <main class="loader">
 
-  <div class="bot-zone">
-
-    <div
-      class="bot-card inactive"
-      id="botCard"
-    >
-
-      <div class="bot-dot"></div>
-
-      <div>
-
-        <div class="bot-name">
-          BOT 🔴
-        </div>
-
-        <div
-          class="bot-state"
-          id="botState"
-        >
-          Waiting...
-        </div>
-
-      </div>
-
-      <div class="wall-count bot-wall-count">
-
-        <span class="wall-icon">
-          🧱
-        </span>
-
-        <span id="redWalls">
-          10
-        </span>
-
-      </div>
-
+    <div class="logo">
+      🧱
     </div>
 
-
-    <div class="bot-energy-space">
-
-      <div
-        class="energy-row bot-energy"
-        id="botEnergy"
-      >
-
-        <span class="energy used">
-          &#9889;
-        </span>
-
-        <span class="energy used">
-          &#9889;
-        </span>
-
-        <span class="energy used">
-          &#9889;
-        </span>
-
-      </div>
-
+    <div class="title">
+      WALL
+      <span>BATTLE</span>
     </div>
 
-  </div>
-
-
-  <div class="game-middle">
-
-    <div id="board">
-
-      <div id="wallLayer"></div>
-
-      <div id="pawnLayer">
-
-        <div
-          class="pawn blue"
-          id="bluePawn"
-        ></div>
-
-        <div
-          class="pawn red"
-          id="redPawn"
-        ></div>
-
-      </div>
-
-      <div id="slotLayer"></div>
-
+    <div class="text">
+      Loading your game...
     </div>
 
-  </div>
-
-
-  <div class="player-energy-space">
-
-    <div
-      class="energy-row player-energy"
-      id="playerEnergy"
-    >
-
-      <span class="energy">
-        &#9889;
-      </span>
-
-      <span class="energy">
-        &#9889;
-      </span>
-
-      <span class="energy">
-        &#9889;
-      </span>
-
+    <div class="dots">
+      <span class="dot"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
     </div>
 
-  </div>
+  </main>
 
 
-  <div class="player-zone">
-
-    <div
-      class="player-card active"
-      id="playerCard"
-    >
-
-      <div class="player-header">
-
-        <div class="player-dot"></div>
-
-        <div>
-
-          <div class="player-name">
-            YOU 🔵
-          </div>
-
-          <div
-            class="player-state"
-            id="playerState"
-          >
-            YOUR TURN
-          </div>
-
-        </div>
-
-        <div class="wall-count player-wall-count">
-
-          <span class="wall-icon">
-            🧱
-          </span>
-
-          <span id="blueWalls">
-            10
-          </span>
-
-        </div>
-
-      </div>
-
-
-      <div class="player-stage">
-
-        <div
-          class="controls-panel"
-          id="controlsPanel"
-        >
-
-          <div class="move-panel">
-
-            <div class="panel-title">
-              MOVE
-            </div>
-
-            <div class="dpad">
-
-              <button
-                class="move-btn move-up"
-                data-dir="up"
-              >
-                &#9650;
-              </button>
-
-              <button
-                class="move-btn move-left"
-                data-dir="left"
-              >
-                &#9664;
-              </button>
-
-              <div class="center-dot">
-                &#9679;
-              </div>
-
-              <button
-                class="move-btn move-right"
-                data-dir="right"
-              >
-                &#9654;
-              </button>
-
-              <button
-                class="move-btn move-down"
-                data-dir="down"
-              >
-                &#9660;
-              </button>
-
-            </div>
-
-          </div>
-
-
-          <div class="wall-panel">
-
-            <div class="panel-title">
-              BLOCK
-            </div>
-
-            <button
-              class="wall-main"
-              id="wallModeBtn"
-            >
-              🧱 PLACE WALL
-            </button>
-
-            <div class="orientation">
-
-              <button
-                class="orientation-btn selected"
-                id="horizontalBtn"
-              >
-                &#9473;&#9473;
-              </button>
-
-              <button
-                class="orientation-btn"
-                id="verticalBtn"
-              >
-                &#9475;
-              </button>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</div>
-
-
-<div
-  class="overlay hidden"
-  id="resultOverlay"
->
-
-  <div class="result-card">
-
-    <div
-      class="result-icon"
-      id="resultIcon"
-    >
-      🏆
-    </div>
-
-    <div
-      class="result-title"
-      id="resultTitle"
-    >
-      YOU WIN!
-    </div>
-
-    <div
-      class="result-text"
-      id="resultText"
-    ></div>
-
-    <button
-      class="restart"
-      id="restartBtn"
-    >
-      REVENGE 🔥
-    </button>
-
-  </div>
-
-</div>
-
-
-<script src="js/game.js?v=2"></script>
+  <script
+    type="module"
+    src="js/router.js?v=1"
+  ></script>
 
 </body>
+
 </html>
