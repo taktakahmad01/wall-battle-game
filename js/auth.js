@@ -143,15 +143,25 @@ const createAccountBtn =
   );
 
 
-const avatarOptions =
-  document.querySelectorAll(
-    ".avatar-option"
-  );
-
-
 const genderOptions =
   document.querySelectorAll(
     ".gender-option"
+  );
+
+
+const avatarCurrent =
+  document.getElementById(
+    "avatarCurrent"
+  );
+
+const avatarPrevBtn =
+  document.getElementById(
+    "avatarPrevBtn"
+  );
+
+const avatarNextBtn =
+  document.getElementById(
+    "avatarNextBtn"
   );
 
 
@@ -165,17 +175,30 @@ const authMessage =
    STATE
 ========================= */
 
-let selectedAvatar =
-  "😎";
-
-
-/*
-  null = user mazal
-  ma khtar la boy la girl.
-*/
-
 let selectedGender =
   null;
+
+
+const avatars = [
+  "😎",
+  "🧢",
+  "👦",
+  "🕶️",
+  "👧",
+  "🎀",
+  "🌸",
+  "✨"
+];
+
+
+let avatarIndex =
+  0;
+
+
+let selectedAvatar =
+  avatars[
+    avatarIndex
+  ];
 
 
 let authReady =
@@ -305,24 +328,32 @@ function usernameToEmail(
 
 function showLogin(){
 
-  loginTab.classList.add(
-    "active"
-  );
+  loginTab
+    .classList
+    .add(
+      "active"
+    );
 
 
-  createTab.classList.remove(
-    "active"
-  );
+  createTab
+    .classList
+    .remove(
+      "active"
+    );
 
 
-  loginPanel.classList.remove(
-    "hidden"
-  );
+  loginPanel
+    .classList
+    .remove(
+      "hidden"
+    );
 
 
-  createPanel.classList.add(
-    "hidden"
-  );
+  createPanel
+    .classList
+    .add(
+      "hidden"
+    );
 
 
   setMessage(
@@ -334,24 +365,32 @@ function showLogin(){
 
 function showCreate(){
 
-  createTab.classList.add(
-    "active"
-  );
+  createTab
+    .classList
+    .add(
+      "active"
+    );
 
 
-  loginTab.classList.remove(
-    "active"
-  );
+  loginTab
+    .classList
+    .remove(
+      "active"
+    );
 
 
-  createPanel.classList.remove(
-    "hidden"
-  );
+  createPanel
+    .classList
+    .remove(
+      "hidden"
+    );
 
 
-  loginPanel.classList.add(
-    "hidden"
-  );
+  loginPanel
+    .classList
+    .add(
+      "hidden"
+    );
 
 
   setMessage(
@@ -416,46 +455,8 @@ genderOptions.forEach(
 
 
 /* =========================
-   AVATAR
+   AVATAR CAROUSEL
 ========================= */
-
-const avatarCurrent =
-  document.getElementById(
-    "avatarCurrent"
-  );
-
-const avatarPrevBtn =
-  document.getElementById(
-    "avatarPrevBtn"
-  );
-
-const avatarNextBtn =
-  document.getElementById(
-    "avatarNextBtn"
-  );
-
-
-const avatars = [
-  "😎",
-  "🧢",
-  "👦",
-  "🕶️",
-  "👧",
-  "🎀",
-  "🌸",
-  "✨"
-];
-
-
-let avatarIndex =
-  0;
-
-
-let selectedAvatar =
-  avatars[
-    avatarIndex
-  ];
-
 
 function animateAvatar(
   direction
@@ -466,6 +467,10 @@ function animateAvatar(
     "avatar-from-right"
   );
 
+
+  /*
+    Restart animation.
+  */
 
   void avatarCurrent.offsetWidth;
 
@@ -549,6 +554,103 @@ avatarPrevBtn.addEventListener(
 
   }
 );
+
+
+/* =========================
+   OPTIONAL SWIPE
+========================= */
+
+let avatarTouchStartX =
+  null;
+
+
+avatarCurrent.addEventListener(
+  "touchstart",
+  event=>{
+
+    if(
+      !event.touches ||
+      !event.touches.length
+    ){
+
+      return;
+
+    }
+
+
+    avatarTouchStartX =
+      event.touches[0].clientX;
+
+  },
+  {
+    passive:true
+  }
+);
+
+
+avatarCurrent.addEventListener(
+  "touchend",
+  event=>{
+
+    if(
+      avatarTouchStartX === null ||
+      !event.changedTouches ||
+      !event.changedTouches.length
+    ){
+
+      return;
+
+    }
+
+
+    const endX =
+      event.changedTouches[0].clientX;
+
+
+    const distance =
+      endX -
+      avatarTouchStartX;
+
+
+    avatarTouchStartX =
+      null;
+
+
+    /*
+      Ignore tiny touch movements.
+    */
+
+    if(
+      Math.abs(
+        distance
+      ) < 35
+    ){
+
+      return;
+
+    }
+
+
+    if(
+      distance < 0
+    ){
+
+      avatarNextBtn.click();
+
+    }
+
+    else{
+
+      avatarPrevBtn.click();
+
+    }
+
+  },
+  {
+    passive:true
+  }
+);
+
 
 /* =========================
    PERSISTENCE
@@ -705,7 +807,7 @@ createAccountBtn.addEventListener(
     try{
 
       /* =========================
-         CREATE FIREBASE AUTH
+         CREATE AUTH
       ========================== */
 
       const email =
@@ -731,7 +833,7 @@ createAccountBtn.addEventListener(
 
 
       /* =========================
-         FIRESTORE PROFILE
+         FIRESTORE TRANSACTION
       ========================== */
 
       await runTransaction(
@@ -791,12 +893,6 @@ createAccountBtn.addEventListener(
 
               avatar:
                 selectedAvatar,
-
-              /*
-                Daba gender
-                user khtarha
-                b wa7do.
-              */
 
               gender:
                 selectedGender,
@@ -863,10 +959,8 @@ createAccountBtn.addEventListener(
 
 
       /*
-        Ila Auth tkhlaq
-        w Firestore fail,
-        nms7o Auth bach
-        mayb9ach account na9s.
+        Rollback Auth account
+        if Firestore failed.
       */
 
       if(
@@ -1110,7 +1204,8 @@ loginPassword.addEventListener(
   event=>{
 
     if(
-      event.key === "Enter"
+      event.key ===
+      "Enter"
     ){
 
       loginBtn.click();
@@ -1130,7 +1225,8 @@ createPassword.addEventListener(
   event=>{
 
     if(
-      event.key === "Enter"
+      event.key ===
+      "Enter"
     ){
 
       createAccountBtn.click();
@@ -1152,6 +1248,11 @@ onAuthStateChanged(
     authReady =
       true;
 
+
+    /*
+      Existing session:
+      skip auth page.
+    */
 
     if(
       user &&
