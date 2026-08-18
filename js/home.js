@@ -181,28 +181,11 @@ playOnlineBtn.addEventListener(
       "Finding an opponent..."
     );
 
-
-    /*
-      مؤقتاً:
-      كنمشيو للعبة الحالية مباشرة.
-
-      من بعد غادي ندخلو هنا
-      matchmaking ديال الخصوم.
-    */
-
-    setTimeout(
-      ()=>{
-
-        window.location.href =
-          "index.html";
-
-      },
-      500
-    );
+    window.location.href =
+      "match.html";
 
   }
 );
-
 
 /* =========================
    CREATE FRIEND CODE
