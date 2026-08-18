@@ -15,9 +15,18 @@ body{
   min-height:100%;
 }
 
+html{
+  background:#07101b;
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+}
+
 body{
-  min-height:100dvh;
+  width:100%;
+  min-height:100vh;
+
   overflow-x:hidden;
+  overflow-y:auto;
 
   font-family:
     Arial,
@@ -28,10 +37,10 @@ body{
 
   background:
     radial-gradient(
-      circle at 50% -10%,
+      circle at 50% 0%,
       #294f78 0%,
-      #142a43 35%,
-      #0b1929 68%,
+      #142a43 34%,
+      #0b1929 67%,
       #06101b 100%
     );
 }
@@ -43,8 +52,10 @@ input{
 
 button{
   border:0;
+  outline:0;
   cursor:pointer;
   color:#fff;
+  touch-action:manipulation;
 }
 
 button:active{
@@ -58,38 +69,43 @@ button:active{
 
 #homeApp{
   width:100%;
-  min-height:100dvh;
+  min-height:100vh;
 
   display:flex;
   flex-direction:column;
 
-  padding:
-    max(14px,env(safe-area-inset-top))
-    14px
-    max(18px,env(safe-area-inset-bottom));
-
-  overflow-x:hidden;
+  padding-top:12px;
+  padding-right:12px;
+  padding-bottom:16px;
+  padding-left:12px;
 }
 
 
 /* =========================
-   PROFILE
+   PROFILE CARD
 ========================= */
 
 .profile-card{
-  width:100%;
-  max-width:520px;
+  width:
+    min(
+      calc(100vw - 24px),
+      520px
+    );
 
   margin:0 auto;
 
   display:grid;
-  grid-template-columns:auto 1fr auto;
+
+  grid-template-columns:
+    auto minmax(0,1fr) auto;
 
   align-items:center;
 
-  gap:11px;
+  gap:10px;
 
-  padding:10px 12px;
+  padding:
+    9px
+    11px;
 
   border-radius:20px;
 
@@ -113,8 +129,8 @@ button:active{
 .profile-avatar{
   position:relative;
 
-  width:48px;
-  height:48px;
+  width:46px;
+  height:46px;
 
   display:flex;
   align-items:center;
@@ -124,7 +140,7 @@ button:active{
 
   border-radius:50%;
 
-  font-size:25px;
+  font-size:24px;
 
   background:
     radial-gradient(
@@ -188,16 +204,20 @@ button:active{
 }
 
 .profile-meta{
-  margin-top:5px;
+  margin-top:4px;
 
   display:flex;
   align-items:center;
 
   gap:5px;
 
+  min-width:0;
+
   color:#91a5bc;
 
   font-size:10px;
+  line-height:1.2;
+
   font-weight:700;
 }
 
@@ -215,15 +235,17 @@ button:active{
 ========================= */
 
 .wins-box{
-  min-width:73px;
+  min-width:70px;
 
   display:flex;
   align-items:center;
   justify-content:center;
 
-  gap:7px;
+  gap:6px;
 
-  padding:7px 9px;
+  padding:
+    7px
+    8px;
 
   border-radius:14px;
 
@@ -236,11 +258,11 @@ button:active{
 }
 
 .wins-icon{
-  font-size:20px;
+  font-size:19px;
 }
 
 .wins-number{
-  font-size:18px;
+  font-size:17px;
   line-height:1;
 
   font-weight:900;
@@ -254,6 +276,8 @@ button:active{
   color:#8fa0b4;
 
   font-size:7px;
+  line-height:1;
+
   font-weight:900;
 
   letter-spacing:1px;
@@ -265,9 +289,11 @@ button:active{
 ========================= */
 
 .hero{
-  flex:1;
+  width:100%;
 
-  min-height:220px;
+  flex:1 0 auto;
+
+  min-height:210px;
 
   display:flex;
   flex-direction:column;
@@ -277,22 +303,25 @@ button:active{
 
   text-align:center;
 
-  padding:30px 10px 24px;
+  padding:
+    24px
+    10px
+    20px;
 }
 
 .hero-icon{
-  width:78px;
-  height:78px;
+  width:74px;
+  height:74px;
 
   display:flex;
   align-items:center;
   justify-content:center;
 
-  margin-bottom:15px;
+  margin-bottom:13px;
 
-  border-radius:24px;
+  border-radius:23px;
 
-  font-size:42px;
+  font-size:40px;
 
   background:
     linear-gradient(
@@ -313,12 +342,12 @@ button:active{
 }
 
 .hero h1{
-  font-size:35px;
-  line-height:.95;
+  font-size:34px;
+  line-height:.96;
 
-  font-weight:1000;
+  font-weight:900;
 
-  letter-spacing:-1.5px;
+  letter-spacing:-1.2px;
 
   text-shadow:
     0 5px 20px
@@ -332,7 +361,7 @@ button:active{
 .hero p{
   max-width:300px;
 
-  margin-top:12px;
+  margin-top:10px;
 
   color:#8ea3bb;
 
@@ -348,8 +377,11 @@ button:active{
 ========================= */
 
 .main-actions{
-  width:100%;
-  max-width:520px;
+  width:
+    min(
+      calc(100vw - 24px),
+      520px
+    );
 
   margin:0 auto;
 }
@@ -361,18 +393,20 @@ button:active{
 
 .play-online-btn{
   width:100%;
-  min-height:72px;
+  min-height:70px;
 
   display:grid;
 
   grid-template-columns:
-    auto 1fr auto;
+    auto minmax(0,1fr) auto;
 
   align-items:center;
 
-  gap:13px;
+  gap:12px;
 
-  padding:12px 17px;
+  padding:
+    12px
+    16px;
 
   border-radius:20px;
 
@@ -403,8 +437,8 @@ button:active{
 }
 
 .btn-icon{
-  width:45px;
-  height:45px;
+  width:44px;
+  height:44px;
 
   display:flex;
   align-items:center;
@@ -412,7 +446,7 @@ button:active{
 
   border-radius:14px;
 
-  font-size:24px;
+  font-size:23px;
 
   background:
     rgba(255,255,255,.13);
@@ -431,6 +465,8 @@ button:active{
 
 .btn-content strong{
   font-size:15px;
+  line-height:1.1;
+
   font-weight:900;
 
   letter-spacing:.3px;
@@ -443,11 +479,13 @@ button:active{
     rgba(255,255,255,.68);
 
   font-size:9px;
+  line-height:1.2;
+
   font-weight:700;
 }
 
 .btn-arrow{
-  font-size:31px;
+  font-size:30px;
   line-height:1;
 
   color:
@@ -460,9 +498,9 @@ button:active{
 ========================= */
 
 .friend-card{
-  margin-top:12px;
+  margin-top:11px;
 
-  padding:14px;
+  padding:13px;
 
   border-radius:21px;
 
@@ -485,14 +523,16 @@ button:active{
 
   gap:7px;
 
-  margin-bottom:12px;
+  margin-bottom:11px;
 
   color:#9aacc0;
 
   font-size:9px;
+  line-height:1;
+
   font-weight:900;
 
-  letter-spacing:1.1px;
+  letter-spacing:1px;
 }
 
 
@@ -502,7 +542,7 @@ button:active{
 
 .create-code-btn{
   width:100%;
-  height:51px;
+  height:50px;
 
   display:flex;
   align-items:center;
@@ -534,7 +574,7 @@ button:active{
 }
 
 .create-code-btn span{
-  font-size:19px;
+  font-size:18px;
   line-height:1;
 }
 
@@ -545,7 +585,7 @@ button:active{
 
 
 /* =========================
-   OR
+   OR LINE
 ========================= */
 
 .or-line{
@@ -560,7 +600,9 @@ button:active{
 
   gap:10px;
 
-  margin:13px 0;
+  margin:
+    12px
+    0;
 }
 
 .or-line span{
@@ -574,6 +616,8 @@ button:active{
   color:#657990;
 
   font-size:8px;
+  line-height:1;
+
   font-weight:900;
 }
 
@@ -586,7 +630,8 @@ button:active{
   display:grid;
 
   grid-template-columns:
-    1fr 92px;
+    minmax(0,1fr)
+    90px;
 
   gap:8px;
 }
@@ -595,9 +640,11 @@ button:active{
   width:100%;
   min-width:0;
 
-  height:50px;
+  height:49px;
 
-  padding:0 15px;
+  padding:
+    0
+    14px;
 
   outline:0;
 
@@ -629,7 +676,8 @@ button:active{
   color:#61758c;
 
   font-size:9px;
-  letter-spacing:1.4px;
+
+  letter-spacing:1.3px;
 }
 
 #roomCodeInput:focus{
@@ -642,7 +690,7 @@ button:active{
 }
 
 #joinCodeBtn{
-  height:50px;
+  height:49px;
 
   border-radius:14px;
 
@@ -661,8 +709,7 @@ button:active{
     rgba(255,255,255,.08);
 
   transition:
-    transform .12s ease,
-    background .12s ease;
+    transform .12s ease;
 }
 
 #joinCodeBtn:active{
@@ -671,11 +718,11 @@ button:active{
 
 
 /* =========================
-   HOME STATUS
+   STATUS
 ========================= */
 
 .home-status{
-  min-height:37px;
+  min-height:36px;
 
   display:flex;
   align-items:center;
@@ -686,12 +733,16 @@ button:active{
   color:#667b92;
 
   font-size:8px;
+  line-height:1;
+
   font-weight:800;
 }
 
 .status-dot{
   width:6px;
   height:6px;
+
+  flex:none;
 
   border-radius:50%;
 
@@ -704,122 +755,61 @@ button:active{
 
 
 /* =========================
-   TABLET / DESKTOP
+   SMALL WIDTH PHONE
 ========================= */
 
-@media(min-width:600px){
+@media(max-width:390px){
 
   #homeApp{
-    justify-content:center;
+    padding-left:8px;
+    padding-right:8px;
+  }
 
-    padding-left:20px;
-    padding-right:20px;
+  .profile-card,
+  .main-actions{
+    width:
+      calc(
+        100vw - 16px
+      );
   }
 
   .profile-card{
-    margin-top:10px;
-  }
-
-  .hero{
-    min-height:260px;
-    flex:0 1 300px;
-  }
-
-  .hero h1{
-    font-size:42px;
-  }
-
-}
-
-
-/* =========================
-   SMALL HEIGHT PHONES
-========================= */
-
-@media(max-height:720px){
-
-  #homeApp{
-    padding-top:
-      max(7px,env(safe-area-inset-top));
-
-    padding-bottom:
-      max(7px,env(safe-area-inset-bottom));
-  }
-
-  .profile-card{
-    padding:7px 9px;
+    padding:
+      8px
+      9px;
   }
 
   .profile-avatar{
-    width:40px;
-    height:40px;
+    width:42px;
+    height:42px;
 
     font-size:21px;
   }
 
-  .hero{
-    min-height:145px;
+  .profile-name{
+    font-size:14px;
+  }
 
-    padding:
-      13px 10px
-      12px;
+  .wins-box{
+    min-width:64px;
+  }
+
+  .hero{
+    min-height:190px;
+
+    padding-top:19px;
+    padding-bottom:17px;
   }
 
   .hero-icon{
-    width:55px;
-    height:55px;
+    width:66px;
+    height:66px;
 
-    margin-bottom:9px;
-
-    border-radius:18px;
-
-    font-size:30px;
+    font-size:35px;
   }
 
   .hero h1{
-    font-size:28px;
-  }
-
-  .hero p{
-    margin-top:7px;
-  }
-
-  .play-online-btn{
-    min-height:61px;
-  }
-
-  .btn-icon{
-    width:39px;
-    height:39px;
-
-    font-size:20px;
-  }
-
-  .friend-card{
-    margin-top:8px;
-
-    padding:10px;
-  }
-
-  .friend-title{
-    margin-bottom:8px;
-  }
-
-  .create-code-btn{
-    height:43px;
-  }
-
-  .or-line{
-    margin:8px 0;
-  }
-
-  #roomCodeInput,
-  #joinCodeBtn{
-    height:43px;
-  }
-
-  .home-status{
-    min-height:25px;
+    font-size:31px;
   }
 
 }
@@ -832,8 +822,16 @@ button:active{
 @media(max-width:340px){
 
   #homeApp{
-    padding-left:8px;
-    padding-right:8px;
+    padding-left:6px;
+    padding-right:6px;
+  }
+
+  .profile-card,
+  .main-actions{
+    width:
+      calc(
+        100vw - 12px
+      );
   }
 
   .profile-card{
@@ -841,8 +839,8 @@ button:active{
   }
 
   .profile-avatar{
-    width:40px;
-    height:40px;
+    width:39px;
+    height:39px;
 
     font-size:20px;
   }
@@ -856,13 +854,72 @@ button:active{
   }
 
   .wins-box{
-    min-width:62px;
-    padding:6px;
+    min-width:58px;
+
+    padding:
+      6px;
+  }
+
+  .hero{
+    min-height:170px;
+  }
+
+  .hero-icon{
+    width:58px;
+    height:58px;
+
+    font-size:31px;
+  }
+
+  .hero h1{
+    font-size:28px;
+  }
+
+  .play-online-btn{
+    min-height:64px;
+
+    padding:
+      10px
+      12px;
+  }
+
+  .btn-icon{
+    width:40px;
+    height:40px;
+
+    font-size:20px;
   }
 
   .join-row{
     grid-template-columns:
-      1fr 75px;
+      minmax(0,1fr)
+      74px;
+  }
+
+  #roomCodeInput{
+    letter-spacing:2px;
+  }
+
+}
+
+
+/* =========================
+   WIDE SCREENS
+========================= */
+
+@media(min-width:600px){
+
+  #homeApp{
+    padding-left:20px;
+    padding-right:20px;
+  }
+
+  .hero{
+    min-height:250px;
+  }
+
+  .hero h1{
+    font-size:40px;
   }
 
 }
