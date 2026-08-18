@@ -1,4 +1,83 @@
 /* =========================
+   FIREBASE IMPORTS
+========================= */
+
+import {
+  initializeApp
+} from
+  "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+
+
+import {
+  getAuth,
+  onAuthStateChanged
+} from
+  "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
+
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  updateDoc,
+  serverTimestamp
+} from
+  "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+
+/* =========================
+   FIREBASE CONFIG
+========================= */
+
+const firebaseConfig = {
+
+  apiKey:
+    "AIzaSyBiHbADPPYAOLzRzaCCfvTFKpe89clPHsI",
+
+  authDomain:
+    "rps-online-5e3d5.firebaseapp.com",
+
+  databaseURL:
+    "https://rps-online-5e3d5-default-rtdb.europe-west1.firebasedatabase.app",
+
+  projectId:
+    "rps-online-5e3d5",
+
+  storageBucket:
+    "rps-online-5e3d5.firebasestorage.app",
+
+  messagingSenderId:
+    "173039684242",
+
+  appId:
+    "1:173039684242:web:c3c00e53493d696fa9b44b"
+
+};
+
+
+/* =========================
+   INIT
+========================= */
+
+const app =
+  initializeApp(
+    firebaseConfig
+  );
+
+
+const auth =
+  getAuth(
+    app
+  );
+
+
+const db =
+  getFirestore(
+    app
+  );
+
+
+/* =========================
    HOME DOM
 ========================= */
 
@@ -26,6 +105,7 @@ const winsCount =
   document.getElementById(
     "winsCount"
   );
+
 
 const playOnlineBtn =
   document.getElementById(
@@ -87,11 +167,6 @@ const matchSearchText =
     "matchSearchText"
   );
 
-const matchDots =
-  document.getElementById(
-    "matchDots"
-  );
-
 const matchSubtext =
   document.getElementById(
     "matchSubtext"
@@ -99,93 +174,18 @@ const matchSubtext =
 
 
 /* =========================
-   PLAYER
+   PLAYER STATE
 ========================= */
 
-const defaultPlayer = {
-
-  name:"Player",
-
-  avatar:"😎",
-
-  countryFlag:"🇲🇦",
-
-  countryName:"Morocco",
-
-  gender:"boy",
-
-  wins:0
-
-};
-
-
-function loadPlayer(){
-
-  let savedPlayer = null;
-
-
-  try{
-
-    savedPlayer =
-      JSON.parse(
-        localStorage.getItem(
-          "wallBattlePlayer"
-        )
-      );
-
-  }
-
-  catch(error){
-
-    savedPlayer = null;
-
-  }
-
-
-  const data = {
-
-    ...defaultPlayer,
-
-    ...(savedPlayer || {})
-
-  };
-
-
-  avatarEmoji.textContent =
-    data.avatar;
-
-
-  playerName.textContent =
-    data.name;
-
-
-  countryFlag.textContent =
-    data.countryFlag;
-
-
-  countryName.textContent =
-    data.countryName;
-
-
-  winsCount.textContent =
-    data.wins;
-
-
-  matchAvatar.textContent =
-    data.avatar;
-
-
-  return data;
-
-}
-
+let currentUser =
+  null;
 
 let currentPlayer =
-  loadPlayer();
+  null;
 
 
 /* =========================
-   STATUS
+   HOME STATUS
 ========================= */
 
 function setStatus(
@@ -208,6 +208,222 @@ function setStatus(
   }
 
 }
+
+
+/* =========================
+   LOAD PROFILE
+========================= */
+
+async function loadPlayerProfile(
+  user
+){
+
+  const userRef =
+    doc(
+      db,
+      "users",
+      user.uid
+    );
+
+
+  const userSnap =
+    await getDoc(
+      userRef
+    );
+
+
+  if(
+    !userSnap.exists()
+  ){
+
+    throw new Error(
+      "PROFILE_NOT_FOUND"
+    );
+
+  }
+
+
+  const data =
+    userSnap.data();
+
+
+  currentPlayer =
+    data;
+
+
+  /* =========================
+     SHOW DATA IN HOME
+  ========================== */
+
+  avatarEmoji.textContent =
+    data.avatar ||
+    "😎";
+
+
+  playerName.textContent =
+    data.username ||
+    "Player";
+
+
+  countryFlag.textContent =
+    data.countryFlag ||
+    "🌍";
+
+
+  countryName.textContent =
+    data.countryName ||
+    "";
+
+
+  winsCount.textContent =
+    Number(
+      data.wins || 0
+    );
+
+
+  /*
+    Match overlay avatar
+    يكون نفس avatar ديال account.
+  */
+
+  matchAvatar.textContent =
+    data.avatar ||
+    "😎";
+
+
+  /*
+    Cache خفيفة فقط.
+    Firebase يبقى source الحقيقي.
+  */
+
+  try{
+
+    localStorage.setItem(
+      "wallBattlePlayer",
+      JSON.stringify({
+        uid:user.uid,
+        username:data.username || "",
+        avatar:data.avatar || "😎",
+        gender:data.gender || "",
+        countryCode:data.countryCode || "",
+        countryName:data.countryName || "",
+        countryFlag:data.countryFlag || "",
+        wins:Number(data.wins || 0)
+      })
+    );
+
+  }
+
+  catch(error){}
+
+
+  /*
+    lastSeen مسموح به فالRules ديالنا.
+  */
+
+  try{
+
+    await updateDoc(
+      userRef,
+      {
+        lastSeen:
+          serverTimestamp()
+      }
+    );
+
+  }
+
+  catch(error){
+
+    console.warn(
+      "Could not update lastSeen:",
+      error
+    );
+
+  }
+
+}
+
+
+/* =========================
+   AUTH CHECK
+========================= */
+
+onAuthStateChanged(
+  auth,
+  async user=>{
+
+    /*
+      ما عندوش session:
+      يرجع Auth.
+    */
+
+    if(
+      !user
+    ){
+
+      window.location.replace(
+        "auth.html"
+      );
+
+      return;
+
+    }
+
+
+    currentUser =
+      user;
+
+
+    setStatus(
+      "Loading profile..."
+    );
+
+
+    try{
+
+      await loadPlayerProfile(
+        user
+      );
+
+
+      setStatus(
+        "Ready to play"
+      );
+
+    }
+
+    catch(error){
+
+      console.error(
+        "PROFILE LOAD ERROR:",
+        error
+      );
+
+
+      if(
+        error.message ===
+        "PROFILE_NOT_FOUND"
+      ){
+
+        setStatus(
+          "Profile not found"
+        );
+
+      }
+
+      else{
+
+        setStatus(
+          "Could not load profile"
+        );
+
+      }
+
+    }
+
+  }
+);
 
 
 /* =========================
@@ -272,7 +488,7 @@ let audioContext =
 
 
 /* =========================
-   AUDIO
+   MATCH AUDIO
 ========================= */
 
 function getAudio(){
@@ -476,25 +692,25 @@ function resetMatchUI(){
     'SEARCHING <span id="matchDots">.</span>';
 
 
-  /*
-    innerHTML بدلات span،
-    لذلك نجيبوه من جديد.
-  */
-
-  window.matchDotsElement =
-    document.getElementById(
-      "matchDots"
-    );
-
-
   matchSubtext.textContent =
     "Looking for a player";
+
+
+  if(
+    currentPlayer
+  ){
+
+    matchAvatar.textContent =
+      currentPlayer.avatar ||
+      "😎";
+
+  }
 
 }
 
 
 /* =========================
-   STOP TIMERS
+   STOP MATCH TIMERS
 ========================= */
 
 function stopMatchTimers(){
@@ -675,7 +891,14 @@ function matchFound(){
 
 function startMatch(){
 
+  /*
+    ما نبدأوش حتى profile تكون
+    جاية من Firebase.
+  */
+
   if(
+    !currentUser ||
+    !currentPlayer ||
     matchRunning
   ){
 
@@ -763,11 +986,7 @@ function startMatch(){
 
   searchTimer =
     setTimeout(
-      ()=>{
-
-        matchFound();
-
-      },
+      matchFound,
       2000
     );
 
@@ -782,6 +1001,19 @@ playOnlineBtn.addEventListener(
   "click",
   ()=>{
 
+    if(
+      !currentPlayer
+    ){
+
+      setStatus(
+        "Loading profile..."
+      );
+
+      return;
+
+    }
+
+
     startMatch();
 
   }
@@ -789,43 +1021,12 @@ playOnlineBtn.addEventListener(
 
 
 /* =========================
-   CANCEL BUTTON
+   CANCEL MATCH
 ========================= */
 
 matchCancelBtn.addEventListener(
   "click",
-  ()=>{
-
-    cancelMatch();
-
-  }
-);
-
-
-/* =========================
-   PHONE BACK
-========================= */
-
-/*
-  Match ما تبدلاتش لصفحة أخرى.
-
-  كنزيدو state غير ملي يبدأ
-  matching باش Back يقدر يسدو.
-*/
-
-window.addEventListener(
-  "popstate",
-  ()=>{
-
-    if(
-      matchRunning
-    ){
-
-      cancelMatch();
-
-    }
-
-  }
+  cancelMatch
 );
 
 
@@ -836,6 +1037,15 @@ window.addEventListener(
 createCodeBtn.addEventListener(
   "click",
   ()=>{
+
+    if(
+      !currentPlayer
+    ){
+
+      return;
+
+    }
+
 
     const code =
       generateRoomCode();
@@ -887,7 +1097,7 @@ roomCodeInput.addEventListener(
 
 
 /* =========================
-   JOIN CODE
+   JOIN
 ========================= */
 
 joinCodeBtn.addEventListener(
@@ -929,7 +1139,7 @@ joinCodeBtn.addEventListener(
 
 
 /* =========================
-   ENTER KEY
+   ENTER CODE
 ========================= */
 
 roomCodeInput.addEventListener(
@@ -946,13 +1156,4 @@ roomCodeInput.addEventListener(
     }
 
   }
-);
-
-
-/* =========================
-   START
-========================= */
-
-setStatus(
-  "Ready to play"
 );
