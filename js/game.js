@@ -680,58 +680,109 @@ function completeEndTurnHold(){
 }
 
 
-playerEnergy.addEventListener(
-  "pointerdown",
-  e=>{
+/* =========================
+   END TURN INPUT
+   MOBILE + OLD BROWSERS
+========================= */
+
+function startEnergyHold(e){
+
+  if(e){
 
     e.preventDefault();
 
-    startEndTurnHold();
-
   }
-);
 
 
-playerEnergy.addEventListener(
-  "pointerup",
-  e=>{
+  startEndTurnHold();
+
+}
+
+
+function stopEnergyHold(e){
+
+  if(e){
 
     e.preventDefault();
 
-
-    if(
-      endTurnHolding
-    ){
-
-      cancelEndTurnHold();
-
-    }
-
   }
-);
 
 
-playerEnergy.addEventListener(
-  "pointercancel",
-  ()=>{
+  if(
+    endTurnHolding
+  ){
 
     cancelEndTurnHold();
 
   }
+
+}
+
+
+/*
+   TOUCH
+   Mi Browser / old Android
+*/
+
+playerEnergy.addEventListener(
+  "touchstart",
+  startEnergyHold,
+  {
+    passive:false
+  }
 );
 
 
 playerEnergy.addEventListener(
-  "pointerleave",
-  ()=>{
+  "touchend",
+  stopEnergyHold,
+  {
+    passive:false
+  }
+);
 
-    if(
-      endTurnHolding
-    ){
 
-      cancelEndTurnHold();
+playerEnergy.addEventListener(
+  "touchcancel",
+  stopEnergyHold,
+  {
+    passive:false
+  }
+);
 
-    }
+
+/*
+   MOUSE
+   Desktop
+*/
+
+playerEnergy.addEventListener(
+  "mousedown",
+  startEnergyHold
+);
+
+
+playerEnergy.addEventListener(
+  "mouseup",
+  stopEnergyHold
+);
+
+
+playerEnergy.addEventListener(
+  "mouseleave",
+  stopEnergyHold
+);
+
+
+/*
+   Prevent browser long press menu
+*/
+
+playerEnergy.addEventListener(
+  "contextmenu",
+  e=>{
+
+    e.preventDefault();
 
   }
 );
