@@ -24,7 +24,15 @@ import {
 } from
   "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-
+import {
+  getDatabase,
+  ref,
+  set,
+  remove,
+  onValue,
+  serverTimestamp as rtdbServerTimestamp
+} from
+  "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
 /* =========================
    FIREBASE CONFIG
 ========================= */
