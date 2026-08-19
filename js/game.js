@@ -1,3 +1,72 @@
+/* =========================================================
+   FIREBASE IMPORTS
+========================================================= */
+
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+
+import {
+  getAuth,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
+import {
+  getDatabase,
+  ref,
+  get,
+  onValue,
+  runTransaction,
+  update,
+  remove,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+
+/* =========================================================
+   FIREBASE CONFIG
+========================================================= */
+
+const firebaseConfig = {
+
+  apiKey:
+    "AIzaSyBiHbADPPYAOLzRzaCCfvTFKpe89clPHsI",
+
+  authDomain:
+    "rps-online-5e3d5.firebaseapp.com",
+
+  databaseURL:
+    "https://rps-online-5e3d5-default-rtdb.europe-west1.firebasedatabase.app",
+
+  projectId:
+    "rps-online-5e3d5",
+
+  storageBucket:
+    "rps-online-5e3d5.firebasestorage.app",
+
+  messagingSenderId:
+    "173039684242",
+
+  appId:
+    "1:173039684242:web:c3c00e53493d696fa9b44b"
+
+};
+
+
+const firebaseApp =
+  initializeApp(firebaseConfig);
+
+const auth =
+  getAuth(firebaseApp);
+
+const realtimeDb =
+  getDatabase(firebaseApp);
+
+
+/* =========================================================
+   CONSTANTS
+========================================================= */
+
 const SIZE = 9;
 
 const MAX_ENERGY = 3;
@@ -5,9 +74,9 @@ const MAX_ENERGY = 3;
 const END_TURN_HOLD_MS = 900;
 
 
-/* =========================
+/* =========================================================
    DOM
-========================= */
+========================================================= */
 
 const board =
   document.getElementById("board");
@@ -81,10 +150,64 @@ const resultTitle =
 const resultText =
   document.getElementById("resultText");
 
+const restartBtn =
+  document.getElementById("restartBtn");
 
-/* =========================
-   STATE
-========================= */
+
+const opponentName =
+  document.getElementById("opponentName");
+
+const opponentAvatar =
+  document.getElementById("opponentAvatar");
+
+const myGameName =
+  document.getElementById("myGameName");
+
+const myGameAvatar =
+  document.getElementById("myGameAvatar");
+
+
+/* =========================================================
+   ACCOUNT / MATCH
+========================================================= */
+
+let firebaseUser =
+  null;
+
+let activeMatch =
+  null;
+
+let matchId =
+  null;
+
+let matchType =
+  "bot";
+
+let onlineRoom =
+  null;
+
+let onlineGameRef =
+  null;
+
+let onlineGameListenerOff =
+  null;
+
+let myRole =
+  "blue";
+
+let opponentRole =
+  "red";
+
+let onlineReady =
+  false;
+
+let onlineWriteBusy =
+  false;
+
+
+/* =========================================================
+   GAME STATE
+========================================================= */
 
 let cells = [];
 
@@ -101,9 +224,11 @@ let red = {
 };
 
 
-let blueWalls = 10;
+let blueWalls =
+  10;
 
-let redWalls = 10;
+let redWalls =
+  10;
 
 
 let actionsLeft =
@@ -146,9 +271,73 @@ let endTurnHolding =
   false;
 
 
-/* =========================
+/* =========================================================
+   ACTIVE MATCH CACHE
+========================================================= */
+
+function readActiveMatch(){
+
+  try{
+
+    const raw =
+      localStorage.getItem(
+        "wallBattleActiveMatch"
+      );
+
+
+    if(!raw){
+
+      return null;
+
+    }
+
+
+    return JSON.parse(raw);
+
+  }
+
+  catch(error){
+
+    return null;
+
+  }
+
+}
+
+
+function readMyProfile(){
+
+  try{
+
+    const raw =
+      localStorage.getItem(
+        "wallBattlePlayer"
+      );
+
+
+    if(!raw){
+
+      return null;
+
+    }
+
+
+    return JSON.parse(raw);
+
+  }
+
+  catch(error){
+
+    return null;
+
+  }
+
+}
+
+
+/* =========================================================
    AUDIO
-========================= */
+========================================================= */
 
 let audioContext =
   null;
@@ -201,7 +390,9 @@ function tone(
 
 
   if(!ctx){
+
     return;
+
   }
 
 
@@ -234,18 +425,17 @@ function tone(
 
   gain.gain.exponentialRampToValueAtTime(
     volume || .022,
-    start+.01
+    start + .01
   );
 
 
   gain.gain.exponentialRampToValueAtTime(
     .0001,
-    start+duration
+    start + duration
   );
 
 
   osc.connect(gain);
-
 
   gain.connect(
     ctx.destination
@@ -256,8 +446,8 @@ function tone(
 
 
   osc.stop(
-    start+
-    duration+
+    start +
+    duration +
     .03
   );
 
@@ -364,9 +554,9 @@ function soundWin(){
 }
 
 
-/* =========================
+/* =========================================================
    HELPERS
-========================= */
+========================================================= */
 
 function key(r,c){
 
@@ -391,9 +581,42 @@ function isInside(r,c){
 }
 
 
-/* =========================
+function otherRole(role){
+
+  return (
+    role === "blue"
+      ? "red"
+      : "blue"
+  );
+
+}
+
+
+function rolePos(role){
+
+  return (
+    role === "blue"
+      ? blue
+      : red
+  );
+
+}
+
+
+function enemyPos(role){
+
+  return (
+    role === "blue"
+      ? red
+      : blue
+  );
+
+}
+
+
+/* =========================================================
    ENERGY
-========================= */
+========================================================= */
 
 function renderEnergy(
   container,
@@ -463,9 +686,7 @@ function animateEnergyUse(
 
     items[
       usedIndex
-    ]
-    .classList
-    .remove(
+    ].classList.remove(
       "consume"
     );
 
@@ -477,9 +698,7 @@ function animateEnergyUse(
 
     items[
       usedIndex
-    ]
-    .classList
-    .add(
+    ].classList.add(
       "consume"
     );
 
@@ -494,20 +713,47 @@ function animateEnergyUse(
 }
 
 
-/* =========================
+/* =========================================================
    LONG PRESS END TURN
-========================= */
+========================================================= */
 
 function startEndTurnHold(){
 
   if(
     gameOver ||
-    turn !== "blue" ||
     actionsLeft <= 0 ||
     endTurnHolding
   ){
 
     return;
+
+  }
+
+
+  if(
+    matchType === "online"
+  ){
+
+    if(
+      !onlineReady ||
+      turn !== myRole
+    ){
+
+      return;
+
+    }
+
+  }
+
+  else{
+
+    if(
+      turn !== "blue"
+    ){
+
+      return;
+
+    }
 
   }
 
@@ -533,9 +779,7 @@ function startEndTurnHold(){
     i++
   ){
 
-    if(
-      items[i]
-    ){
+    if(items[i]){
 
       items[i]
         .classList
@@ -548,8 +792,7 @@ function startEndTurnHold(){
         .style
         .animationDelay =
         (
-          i *
-          .12
+          i * .12
         ) +
         "s";
 
@@ -634,11 +877,10 @@ function cancelEndTurnHold(){
 }
 
 
-function completeEndTurnHold(){
+async function completeEndTurnHold(){
 
   if(
     gameOver ||
-    turn !== "blue" ||
     actionsLeft <= 0
   ){
 
@@ -652,7 +894,6 @@ function completeEndTurnHold(){
   endTurnHolding =
     false;
 
-
   endTurnHoldTimer =
     null;
 
@@ -662,11 +903,22 @@ function completeEndTurnHold(){
   );
 
 
+  soundEndTurn();
+
+
+  if(
+    matchType === "online"
+  ){
+
+    await onlineEndTurn();
+
+    return;
+
+  }
+
+
   actionsLeft =
     0;
-
-
-  soundEndTurn();
 
 
   renderEnergy(
@@ -680,10 +932,9 @@ function completeEndTurnHold(){
 }
 
 
-/* =========================
+/* =========================================================
    END TURN INPUT
-   MOBILE + OLD BROWSERS
-========================= */
+========================================================= */
 
 function startEnergyHold(e){
 
@@ -719,11 +970,6 @@ function stopEnergyHold(e){
 }
 
 
-/*
-   TOUCH
-   Mi Browser / old Android
-*/
-
 playerEnergy.addEventListener(
   "touchstart",
   startEnergyHold,
@@ -751,11 +997,6 @@ playerEnergy.addEventListener(
 );
 
 
-/*
-   MOUSE
-   Desktop
-*/
-
 playerEnergy.addEventListener(
   "mousedown",
   startEnergyHold
@@ -774,10 +1015,6 @@ playerEnergy.addEventListener(
 );
 
 
-/*
-   Prevent browser long press menu
-*/
-
 playerEnergy.addEventListener(
   "contextmenu",
   e=>{
@@ -788,9 +1025,9 @@ playerEnergy.addEventListener(
 );
 
 
-/* =========================
+/* =========================================================
    BOARD
-========================= */
+========================================================= */
 
 function buildBoard(){
 
@@ -872,7 +1109,20 @@ function buildBoard(){
 
       renderAll();
 
-      preparePlayerTurn();
+
+      if(
+        matchType === "bot"
+      ){
+
+        preparePlayerTurn();
+
+      }
+
+      else{
+
+        renderOnlineTurnUI();
+
+      }
 
     }
   );
@@ -880,9 +1130,9 @@ function buildBoard(){
 }
 
 
-/* =========================
+/* =========================================================
    GEOMETRY
-========================= */
+========================================================= */
 
 function getCellBox(
   r,
@@ -935,9 +1185,9 @@ function getCellBox(
 }
 
 
-/* =========================
+/* =========================================================
    RENDER
-========================= */
+========================================================= */
 
 function renderAll(){
 
@@ -965,21 +1215,30 @@ function renderAll(){
 
   renderWalls();
 
-
   renderWallSlots();
 
 }
 
 
-/* =========================
+/* =========================================================
    PAWN
-========================= */
+========================================================= */
 
 function positionPawn(
   pawn,
   pos,
   animate
 ){
+
+  if(
+    !cells[pos.r] ||
+    !cells[pos.r][pos.c]
+  ){
+
+    return;
+
+  }
+
 
   const box =
     getCellBox(
@@ -1017,9 +1276,9 @@ function positionPawn(
 }
 
 
-/* =========================
+/* =========================================================
    WALL RENDER
-========================= */
+========================================================= */
 
 function renderWalls(){
 
@@ -1097,10 +1356,8 @@ function drawWall(
     "wall " +
     (
       owner === "blue"
-      ?
-      "blue-wall"
-      :
-      "red-wall"
+        ? "blue-wall"
+        : "red-wall"
     );
 
 
@@ -1233,9 +1490,9 @@ function drawWall(
 }
 
 
-/* =========================
+/* =========================================================
    WALL SLOTS
-========================= */
+========================================================= */
 
 function renderWallSlots(){
 
@@ -1243,11 +1500,54 @@ function renderWallSlots(){
     "";
 
 
+  let canUse =
+    false;
+
+
+  if(
+    matchType === "online"
+  ){
+
+    canUse =
+      onlineReady &&
+      turn === myRole &&
+      actionsLeft > 0 &&
+      !gameOver;
+
+  }
+
+  else{
+
+    canUse =
+      turn === "blue" &&
+      actionsLeft > 0 &&
+      !gameOver;
+
+  }
+
+
   if(
     !wallMode ||
-    turn !== "blue" ||
-    actionsLeft <= 0 ||
-    gameOver
+    !canUse
+  ){
+
+    return;
+
+  }
+
+
+  const myWalls =
+    matchType === "online"
+      ? (
+          myRole === "blue"
+            ? blueWalls
+            : redWalls
+        )
+      : blueWalls;
+
+
+  if(
+    myWalls <= 0
   ){
 
     return;
@@ -1381,9 +1681,9 @@ function createWallAnchor(
 }
 
 
-/* =========================
+/* =========================================================
    WALL RULES
-========================= */
+========================================================= */
 
 function canPlaceWallBasic(
   type,
@@ -1487,9 +1787,9 @@ function canPlaceWallBasic(
 }
 
 
-/* =========================
+/* =========================================================
    BLOCKED
-========================= */
+========================================================= */
 
 function blocked(
   r1,
@@ -1619,9 +1919,9 @@ function blocked(
 }
 
 
-/* =========================
+/* =========================================================
    PATH FINDING
-========================= */
+========================================================= */
 
 function getNeighbors(
   pos
@@ -1846,451 +2146,6 @@ function shortestPath(
 }
 
 
-/* =========================
-   PATH AVOID PLAYER
-========================= */
-
-function shortestPathAvoidPlayer(
-  start,
-  targetRow,
-  avoid
-){
-
-  const startKey =
-    key(
-      start.r,
-      start.c
-    );
-
-
-  const queue = [
-    {
-      r:start.r,
-      c:start.c
-    }
-  ];
-
-
-  const visited =
-    new Set([
-      startKey
-    ]);
-
-
-  const parent = {};
-
-
-  let finalKey =
-    null;
-
-
-  while(
-    queue.length
-  ){
-
-    const current =
-      queue.shift();
-
-
-    if(
-      current.r ===
-      targetRow
-    ){
-
-      finalKey =
-        key(
-          current.r,
-          current.c
-        );
-
-
-      break;
-
-    }
-
-
-    for(
-      const next
-      of getNeighbors(
-        current
-      )
-    ){
-
-      if(
-        avoid &&
-        next.r === avoid.r &&
-        next.c === avoid.c
-      ){
-
-        continue;
-
-      }
-
-
-      const k =
-        key(
-          next.r,
-          next.c
-        );
-
-
-      if(
-        visited.has(k)
-      ){
-
-        continue;
-
-      }
-
-
-      visited.add(k);
-
-
-      parent[k] =
-        key(
-          current.r,
-          current.c
-        );
-
-
-      queue.push(
-        next
-      );
-
-    }
-
-  }
-
-
-  if(!finalKey){
-
-    return null;
-
-  }
-
-
-  const path =
-    [];
-
-
-  let current =
-    finalKey;
-
-
-  while(current){
-
-    const parts =
-      current
-        .split(",")
-        .map(Number);
-
-
-    path.push({
-      r:parts[0],
-      c:parts[1]
-    });
-
-
-    if(
-      current ===
-      startKey
-    ){
-
-      break;
-
-    }
-
-
-    current =
-      parent[current];
-
-  }
-
-
-  path.reverse();
-
-
-  return path;
-
-}
-
-
-/* =========================
-   PATH TO EXACT CELL
-========================= */
-
-function shortestPathToCellAvoidPlayer(
-  start,
-  target,
-  avoid
-){
-
-  const startKey =
-    key(
-      start.r,
-      start.c
-    );
-
-
-  const targetKey =
-    key(
-      target.r,
-      target.c
-    );
-
-
-  const queue = [
-    {
-      r:start.r,
-      c:start.c
-    }
-  ];
-
-
-  const visited =
-    new Set([
-      startKey
-    ]);
-
-
-  const parent = {};
-
-
-  let found =
-    false;
-
-
-  while(
-    queue.length
-  ){
-
-    const current =
-      queue.shift();
-
-
-    const currentKey =
-      key(
-        current.r,
-        current.c
-      );
-
-
-    if(
-      currentKey ===
-      targetKey
-    ){
-
-      found =
-        true;
-
-      break;
-
-    }
-
-
-    for(
-      const next
-      of getNeighbors(
-        current
-      )
-    ){
-
-      if(
-        avoid &&
-        next.r === avoid.r &&
-        next.c === avoid.c
-      ){
-
-        continue;
-
-      }
-
-
-      const k =
-        key(
-          next.r,
-          next.c
-        );
-
-
-      if(
-        visited.has(k)
-      ){
-
-        continue;
-
-      }
-
-
-      visited.add(k);
-
-
-      parent[k] =
-        currentKey;
-
-
-      queue.push(
-        next
-      );
-
-    }
-
-  }
-
-
-  if(
-    !found
-  ){
-
-    return null;
-
-  }
-
-
-  const path =
-    [];
-
-
-  let current =
-    targetKey;
-
-
-  while(current){
-
-    const parts =
-      current
-        .split(",")
-        .map(Number);
-
-
-    path.push({
-      r:parts[0],
-      c:parts[1]
-    });
-
-
-    if(
-      current ===
-      startKey
-    ){
-
-      break;
-
-    }
-
-
-    current =
-      parent[current];
-
-  }
-
-
-  path.reverse();
-
-
-  return path;
-
-}
-
-
-/* =========================
-   PATH TO PLAYER SIDE
-========================= */
-
-function pathTowardPlayer(){
-
-  const aroundBlue = [
-
-    {
-      r:blue.r-1,
-      c:blue.c
-    },
-
-    {
-      r:blue.r+1,
-      c:blue.c
-    },
-
-    {
-      r:blue.r,
-      c:blue.c-1
-    },
-
-    {
-      r:blue.r,
-      c:blue.c+1
-    }
-
-  ];
-
-
-  let bestPath =
-    null;
-
-
-  for(
-    const target
-    of aroundBlue
-  ){
-
-    if(
-      !isInside(
-        target.r,
-        target.c
-      )
-    ){
-
-      continue;
-
-    }
-
-
-    if(
-      target.r === blue.r &&
-      target.c === blue.c
-    ){
-
-      continue;
-
-    }
-
-
-    const path =
-      shortestPathToCellAvoidPlayer(
-        red,
-        target,
-        blue
-      );
-
-
-    if(
-      !path
-    ){
-
-      continue;
-
-    }
-
-
-    if(
-      !bestPath ||
-      path.length <
-      bestPath.length
-    ){
-
-      bestPath =
-        path;
-
-    }
-
-  }
-
-
-  return bestPath;
-
-}
-
-
 function shortestPathLength(
   start,
   target
@@ -2304,10 +2159,8 @@ function shortestPathLength(
 
 
   return path
-    ?
-    path.length-1
-    :
-    Infinity;
+    ? path.length - 1
+    : Infinity;
 
 }
 
@@ -2337,11 +2190,2016 @@ function bothPlayersHavePath(){
 }
 
 
-/* =========================
-   PLAYER TURN
-========================= */
+/* =========================================================
+   ONLINE SERIALIZATION
+========================================================= */
+
+function mapsToObject(map){
+
+  const obj = {};
+
+
+  map.forEach(
+    (owner,k)=>{
+
+      obj[k] =
+        owner;
+
+    }
+  );
+
+
+  return obj;
+
+}
+
+
+function objectToMap(obj){
+
+  const map =
+    new Map();
+
+
+  if(
+    !obj ||
+    typeof obj !== "object"
+  ){
+
+    return map;
+
+  }
+
+
+  Object.entries(obj)
+    .forEach(
+      ([k,value])=>{
+
+        map.set(
+          k,
+          value
+        );
+
+      }
+    );
+
+
+  return map;
+
+}
+
+
+/* =========================================================
+   ONLINE INITIAL STATE
+========================================================= */
+
+function initialOnlineGame(){
+
+  return {
+
+    blue:{
+      r:8,
+      c:4
+    },
+
+    red:{
+      r:0,
+      c:4
+    },
+
+    blueWalls:10,
+
+    redWalls:10,
+
+    hWalls:{},
+
+    vWalls:{},
+
+    turn:"blue",
+
+    actionsLeft:
+      MAX_ENERGY,
+
+    status:"playing",
+
+    winner:null,
+
+    revision:0,
+
+    updatedAt:
+      Date.now()
+
+  };
+
+}
+
+
+/* =========================================================
+   ONLINE INIT
+========================================================= */
+
+async function initOnlineGame(){
+
+  if(
+    !matchId ||
+    !firebaseUser
+  ){
+
+    return;
+
+  }
+
+
+  const roomRef =
+    ref(
+      realtimeDb,
+      "gameV2/rooms/" +
+      matchId
+    );
+
+
+  const roomSnap =
+    await get(
+      roomRef
+    );
+
+
+  if(
+    !roomSnap.exists()
+  ){
+
+    throw new Error(
+      "ROOM_NOT_FOUND"
+    );
+
+  }
+
+
+  onlineRoom =
+    roomSnap.val();
+
+
+  if(
+    onlineRoom.player1 ===
+    firebaseUser.uid
+  ){
+
+    myRole =
+      "blue";
+
+  }
+
+  else if(
+    onlineRoom.player2 ===
+    firebaseUser.uid
+  ){
+
+    myRole =
+      "red";
+
+  }
+
+  else{
+
+    throw new Error(
+      "NOT_ROOM_PLAYER"
+    );
+
+  }
+
+
+  opponentRole =
+    otherRole(
+      myRole
+    );
+
+
+  /*
+    Player red يشوف board مقلوبة
+    باش يبقى هو لتحت.
+  */
+
+  if(
+    myRole === "red"
+  ){
+
+    board.style.transform =
+      "rotate(180deg)";
+
+  }
+
+  else{
+
+    board.style.transform =
+      "none";
+
+  }
+
+
+  onlineGameRef =
+    ref(
+      realtimeDb,
+      "gameV2/rooms/" +
+      matchId +
+      "/game"
+    );
+
+
+  /*
+    جوج التلفونات يقدرو يوصلو هنا
+    فنفس الوقت.
+
+    Transaction كتضمن غير واحد
+    يصايب initial state.
+  */
+
+  await runTransaction(
+    onlineGameRef,
+    current=>{
+
+      if(current){
+
+        return current;
+
+      }
+
+
+      return initialOnlineGame();
+
+    }
+  );
+
+
+  setupOnlineNames();
+
+
+  onlineGameListenerOff =
+    onValue(
+      onlineGameRef,
+      snapshot=>{
+
+        if(
+          !snapshot.exists()
+        ){
+
+          return;
+
+        }
+
+
+        applyOnlineGameState(
+          snapshot.val()
+        );
+
+      }
+    );
+
+
+  onlineReady =
+    true;
+
+}
+
+
+/* =========================================================
+   ONLINE PLAYER NAMES
+========================================================= */
+
+function setupOnlineNames(){
+
+  const me =
+    readMyProfile();
+
+
+  if(me){
+
+    myGameName.textContent =
+      me.username ||
+      "YOU";
+
+
+    myGameAvatar.textContent =
+      me.avatar ||
+      "🔵";
+
+  }
+
+
+  if(activeMatch){
+
+    opponentName.textContent =
+      activeMatch.opponentUsername ||
+      "OPPONENT";
+
+
+    opponentAvatar.textContent =
+      activeMatch.opponentAvatar ||
+      "🔴";
+
+  }
+
+}
+
+
+/* =========================================================
+   APPLY ONLINE STATE
+========================================================= */
+
+function applyOnlineGameState(
+  data
+){
+
+  const previousBlue = {
+    ...blue
+  };
+
+
+  const previousRed = {
+    ...red
+  };
+
+
+  blue = {
+
+    r:
+      Number(
+        data.blue?.r ?? 8
+      ),
+
+    c:
+      Number(
+        data.blue?.c ?? 4
+      )
+
+  };
+
+
+  red = {
+
+    r:
+      Number(
+        data.red?.r ?? 0
+      ),
+
+    c:
+      Number(
+        data.red?.c ?? 4
+      )
+
+  };
+
+
+  blueWalls =
+    Number(
+      data.blueWalls ?? 10
+    );
+
+
+  redWalls =
+    Number(
+      data.redWalls ?? 10
+    );
+
+
+  hWalls =
+    objectToMap(
+      data.hWalls
+    );
+
+
+  vWalls =
+    objectToMap(
+      data.vWalls
+    );
+
+
+  turn =
+    data.turn ||
+    "blue";
+
+
+  actionsLeft =
+    Number(
+      data.actionsLeft ??
+      MAX_ENERGY
+    );
+
+
+  gameOver =
+    data.status ===
+    "finished";
+
+
+  renderAll();
+
+
+  if(
+    previousBlue.r !== blue.r ||
+    previousBlue.c !== blue.c
+  ){
+
+    positionPawn(
+      bluePawn,
+      blue,
+      true
+    );
+
+  }
+
+
+  if(
+    previousRed.r !== red.r ||
+    previousRed.c !== red.c
+  ){
+
+    positionPawn(
+      redPawn,
+      red,
+      true
+    );
+
+  }
+
+
+  renderOnlineTurnUI();
+
+
+  if(
+    data.winner &&
+    resultOverlay.classList.contains(
+      "hidden"
+    )
+  ){
+
+    showOnlineResult(
+      data.winner
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   ONLINE TURN UI
+========================================================= */
+
+function renderOnlineTurnUI(){
+
+  if(
+    matchType !== "online"
+  ){
+
+    return;
+
+  }
+
+
+  const myTurn =
+    turn === myRole &&
+    !gameOver;
+
+
+  const enemyTurn =
+    turn === opponentRole &&
+    !gameOver;
+
+
+  playerCard.classList.toggle(
+    "active",
+    myTurn
+  );
+
+
+  playerCard.classList.toggle(
+    "inactive",
+    !myTurn
+  );
+
+
+  botCard.classList.toggle(
+    "active",
+    enemyTurn
+  );
+
+
+  botCard.classList.toggle(
+    "inactive",
+    !enemyTurn
+  );
+
+
+  if(gameOver){
+
+    playerState.textContent =
+      "FINISHED";
+
+
+    botState.textContent =
+      "FINISHED";
+
+  }
+
+  else if(myTurn){
+
+    playerState.textContent =
+      "YOUR TURN";
+
+
+    botState.textContent =
+      "WAITING...";
+
+  }
+
+  else{
+
+    playerState.textContent =
+      "WAITING";
+
+
+    botState.textContent =
+      "PLAYING";
+
+  }
+
+
+  renderEnergy(
+    playerEnergy,
+    myTurn
+      ? actionsLeft
+      : 0
+  );
+
+
+  renderEnergy(
+    botEnergy,
+    enemyTurn
+      ? actionsLeft
+      : 0
+  );
+
+
+  controlsPanel.classList.toggle(
+    "disabled-view",
+    !myTurn
+  );
+
+
+  disableGameControls(
+    !myTurn
+  );
+
+
+  renderWallSlots();
+
+}
+
+
+/* =========================================================
+   ONLINE TRANSACTION HELPERS
+========================================================= */
+
+function stateBlocked(
+  state,
+  r1,
+  c1,
+  r2,
+  c2
+){
+
+  const h =
+    state.hWalls || {};
+
+
+  const v =
+    state.vWalls || {};
+
+
+  if(
+    r2 === r1+1 &&
+    c2 === c1
+  ){
+
+    return (
+      !!h[key(r1,c1)] ||
+      (
+        c1 > 0 &&
+        !!h[key(r1,c1-1)]
+      )
+    );
+
+  }
+
+
+  if(
+    r2 === r1-1 &&
+    c2 === c1
+  ){
+
+    return (
+      !!h[key(r2,c1)] ||
+      (
+        c1 > 0 &&
+        !!h[key(r2,c1-1)]
+      )
+    );
+
+  }
+
+
+  if(
+    c2 === c1+1 &&
+    r2 === r1
+  ){
+
+    return (
+      !!v[key(r1,c1)] ||
+      (
+        r1 > 0 &&
+        !!v[key(r1-1,c1)]
+      )
+    );
+
+  }
+
+
+  if(
+    c2 === c1-1 &&
+    r2 === r1
+  ){
+
+    return (
+      !!v[key(r1,c2)] ||
+      (
+        r1 > 0 &&
+        !!v[key(r1-1,c2)]
+      )
+    );
+
+  }
+
+
+  return true;
+
+}
+
+
+function stateCanPlaceWallBasic(
+  state,
+  type,
+  r,
+  c
+){
+
+  if(
+    r < 0 ||
+    c < 0 ||
+    r >= SIZE-1 ||
+    c >= SIZE-1
+  ){
+
+    return false;
+
+  }
+
+
+  const h =
+    state.hWalls || {};
+
+
+  const v =
+    state.vWalls || {};
+
+
+  if(
+    type === "h"
+  ){
+
+    if(h[key(r,c)]){
+
+      return false;
+
+    }
+
+
+    if(
+      c > 0 &&
+      h[key(r,c-1)]
+    ){
+
+      return false;
+
+    }
+
+
+    if(
+      c < SIZE-2 &&
+      h[key(r,c+1)]
+    ){
+
+      return false;
+
+    }
+
+  }
+
+  else{
+
+    if(v[key(r,c)]){
+
+      return false;
+
+    }
+
+
+    if(
+      r > 0 &&
+      v[key(r-1,c)]
+    ){
+
+      return false;
+
+    }
+
+
+    if(
+      r < SIZE-2 &&
+      v[key(r+1,c)]
+    ){
+
+      return false;
+
+    }
+
+  }
+
+
+  return true;
+
+}
+
+
+/* =========================================================
+   ONLINE PATH VALIDATION
+========================================================= */
+
+function stateHasPath(
+  state,
+  start,
+  targetRow
+){
+
+  const queue = [
+    {
+      r:start.r,
+      c:start.c
+    }
+  ];
+
+
+  const visited =
+    new Set([
+      key(
+        start.r,
+        start.c
+      )
+    ]);
+
+
+  while(queue.length){
+
+    const current =
+      queue.shift();
+
+
+    if(
+      current.r ===
+      targetRow
+    ){
+
+      return true;
+
+    }
+
+
+    const dirs = [
+
+      [-1,0],
+      [1,0],
+      [0,-1],
+      [0,1]
+
+    ];
+
+
+    for(
+      const [dr,dc]
+      of dirs
+    ){
+
+      const nr =
+        current.r + dr;
+
+
+      const nc =
+        current.c + dc;
+
+
+      if(
+        !isInside(
+          nr,
+          nc
+        )
+      ){
+
+        continue;
+
+      }
+
+
+      if(
+        stateBlocked(
+          state,
+          current.r,
+          current.c,
+          nr,
+          nc
+        )
+      ){
+
+        continue;
+
+      }
+
+
+      const k =
+        key(
+          nr,
+          nc
+        );
+
+
+      if(
+        visited.has(k)
+      ){
+
+        continue;
+
+      }
+
+
+      visited.add(k);
+
+
+      queue.push({
+        r:nr,
+        c:nc
+      });
+
+    }
+
+  }
+
+
+  return false;
+
+}
+
+
+function stateBothHavePath(
+  state
+){
+
+  return (
+
+    stateHasPath(
+      state,
+      state.blue,
+      0
+    )
+
+    &&
+
+    stateHasPath(
+      state,
+      state.red,
+      SIZE-1
+    )
+
+  );
+
+}
+
+
+/* =========================================================
+   ONLINE MOVE
+========================================================= */
+
+async function onlineMove(
+  direction
+){
+
+  if(
+    !onlineReady ||
+    onlineWriteBusy ||
+    gameOver
+  ){
+
+    return;
+
+  }
+
+
+  onlineWriteBusy =
+    true;
+
+
+  let accepted =
+    false;
+
+
+  try{
+
+    await runTransaction(
+      onlineGameRef,
+      state=>{
+
+        if(
+          !state ||
+          state.status !== "playing" ||
+          state.turn !== myRole ||
+          Number(state.actionsLeft) <= 0
+        ){
+
+          return;
+
+        }
+
+
+        const mine =
+          {
+            ...state[myRole]
+          };
+
+
+        const enemy =
+          state[
+            otherRole(myRole)
+          ];
+
+
+        let nr =
+          mine.r;
+
+
+        let nc =
+          mine.c;
+
+
+        /*
+          إلا player هو red،
+          board مقلوبة 180°.
+
+          Up فالشاشة =
+          canonical down.
+        */
+
+        if(
+          myRole === "red"
+        ){
+
+          if(direction === "up"){
+            nr++;
+          }
+
+          if(direction === "down"){
+            nr--;
+          }
+
+          if(direction === "left"){
+            nc++;
+          }
+
+          if(direction === "right"){
+            nc--;
+          }
+
+        }
+
+        else{
+
+          if(direction === "up"){
+            nr--;
+          }
+
+          if(direction === "down"){
+            nr++;
+          }
+
+          if(direction === "left"){
+            nc--;
+          }
+
+          if(direction === "right"){
+            nc++;
+          }
+
+        }
+
+
+        if(
+          !isInside(
+            nr,
+            nc
+          )
+        ){
+
+          return;
+
+        }
+
+
+        if(
+          stateBlocked(
+            state,
+            mine.r,
+            mine.c,
+            nr,
+            nc
+          )
+        ){
+
+          return;
+
+        }
+
+
+        if(
+          nr === enemy.r &&
+          nc === enemy.c
+        ){
+
+          return;
+
+        }
+
+
+        state[myRole] = {
+
+          r:nr,
+          c:nc
+
+        };
+
+
+        let left =
+          Number(
+            state.actionsLeft
+          ) - 1;
+
+
+        const won =
+          (
+            myRole === "blue" &&
+            nr === 0
+          )
+          ||
+          (
+            myRole === "red" &&
+            nr === SIZE-1
+          );
+
+
+        if(won){
+
+          state.actionsLeft =
+            0;
+
+
+          state.winner =
+            myRole;
+
+
+          state.status =
+            "finished";
+
+        }
+
+        else if(
+          left <= 0
+        ){
+
+          state.turn =
+            otherRole(
+              myRole
+            );
+
+
+          state.actionsLeft =
+            MAX_ENERGY;
+
+        }
+
+        else{
+
+          state.actionsLeft =
+            left;
+
+        }
+
+
+        state.revision =
+          Number(
+            state.revision || 0
+          ) + 1;
+
+
+        state.updatedAt =
+          Date.now();
+
+
+        accepted =
+          true;
+
+
+        return state;
+
+      }
+    );
+
+
+    if(accepted){
+
+      soundMove();
+
+      soundEnergy();
+
+    }
+
+    else{
+
+      soundError();
+
+    }
+
+  }
+
+  catch(error){
+
+    console.error(
+      "ONLINE MOVE ERROR:",
+      error
+    );
+
+
+    soundError();
+
+  }
+
+  finally{
+
+    onlineWriteBusy =
+      false;
+
+  }
+
+}
+
+
+/* =========================================================
+   ONLINE WALL
+========================================================= */
+
+async function onlinePlaceWall(
+  type,
+  r,
+  c
+){
+
+  if(
+    !onlineReady ||
+    onlineWriteBusy ||
+    gameOver
+  ){
+
+    return;
+
+  }
+
+
+  onlineWriteBusy =
+    true;
+
+
+  let accepted =
+    false;
+
+
+  try{
+
+    await runTransaction(
+      onlineGameRef,
+      state=>{
+
+        if(
+          !state ||
+          state.status !== "playing" ||
+          state.turn !== myRole ||
+          Number(state.actionsLeft) <= 0
+        ){
+
+          return;
+
+        }
+
+
+        const wallCountKey =
+          myRole === "blue"
+            ? "blueWalls"
+            : "redWalls";
+
+
+        if(
+          Number(
+            state[wallCountKey]
+          ) <= 0
+        ){
+
+          return;
+
+        }
+
+
+        if(
+          !stateCanPlaceWallBasic(
+            state,
+            type,
+            r,
+            c
+          )
+        ){
+
+          return;
+
+        }
+
+
+        if(
+          !state.hWalls
+        ){
+
+          state.hWalls = {};
+
+        }
+
+
+        if(
+          !state.vWalls
+        ){
+
+          state.vWalls = {};
+
+        }
+
+
+        const target =
+          type === "h"
+            ? state.hWalls
+            : state.vWalls;
+
+
+        target[key(r,c)] =
+          myRole;
+
+
+        if(
+          !stateBothHavePath(
+            state
+          )
+        ){
+
+          delete target[
+            key(r,c)
+          ];
+
+
+          return;
+
+        }
+
+
+        state[wallCountKey] =
+          Number(
+            state[wallCountKey]
+          ) - 1;
+
+
+        let left =
+          Number(
+            state.actionsLeft
+          ) - 1;
+
+
+        if(
+          left <= 0
+        ){
+
+          state.turn =
+            otherRole(
+              myRole
+            );
+
+
+          state.actionsLeft =
+            MAX_ENERGY;
+
+        }
+
+        else{
+
+          state.actionsLeft =
+            left;
+
+        }
+
+
+        state.revision =
+          Number(
+            state.revision || 0
+          ) + 1;
+
+
+        state.updatedAt =
+          Date.now();
+
+
+        accepted =
+          true;
+
+
+        return state;
+
+      }
+    );
+
+
+    if(accepted){
+
+      soundWall();
+
+      soundEnergy();
+
+      closeWallMode();
+
+    }
+
+    else{
+
+      soundError();
+
+    }
+
+  }
+
+  catch(error){
+
+    console.error(
+      "ONLINE WALL ERROR:",
+      error
+    );
+
+
+    soundError();
+
+  }
+
+  finally{
+
+    onlineWriteBusy =
+      false;
+
+  }
+
+}
+
+
+/* =========================================================
+   ONLINE END TURN
+========================================================= */
+
+async function onlineEndTurn(){
+
+  if(
+    !onlineReady ||
+    onlineWriteBusy
+  ){
+
+    return;
+
+  }
+
+
+  onlineWriteBusy =
+    true;
+
+
+  try{
+
+    await runTransaction(
+      onlineGameRef,
+      state=>{
+
+        if(
+          !state ||
+          state.status !== "playing" ||
+          state.turn !== myRole
+        ){
+
+          return;
+
+        }
+
+
+        state.turn =
+          otherRole(
+            myRole
+          );
+
+
+        state.actionsLeft =
+          MAX_ENERGY;
+
+
+        state.revision =
+          Number(
+            state.revision || 0
+          ) + 1;
+
+
+        state.updatedAt =
+          Date.now();
+
+
+        return state;
+
+      }
+    );
+
+  }
+
+  catch(error){
+
+    console.error(
+      "END TURN ERROR:",
+      error
+    );
+
+  }
+
+  finally{
+
+    onlineWriteBusy =
+      false;
+
+  }
+
+}
+
+
+/* =========================================================
+   PLAYER MOVE INPUT
+========================================================= */
+
+moveButtons.forEach(
+  button=>{
+
+    button.addEventListener(
+      "click",
+      async ()=>{
+
+        if(
+          gameOver
+        ){
+
+          return;
+
+        }
+
+
+        closeWallMode();
+
+
+        const direction =
+          button.dataset.dir;
+
+
+        if(
+          matchType === "online"
+        ){
+
+          await onlineMove(
+            direction
+          );
+
+
+          return;
+
+        }
+
+
+        if(
+          turn !== "blue" ||
+          actionsLeft <= 0
+        ){
+
+          return;
+
+        }
+
+
+        let nr =
+          blue.r;
+
+
+        let nc =
+          blue.c;
+
+
+        if(direction === "up"){
+          nr--;
+        }
+
+        if(direction === "down"){
+          nr++;
+        }
+
+        if(direction === "left"){
+          nc--;
+        }
+
+        if(direction === "right"){
+          nc++;
+        }
+
+
+        if(
+          !isInside(
+            nr,
+            nc
+          )
+          ||
+          blocked(
+            blue.r,
+            blue.c,
+            nr,
+            nc
+          )
+        ){
+
+          soundError();
+
+          return;
+
+        }
+
+
+        if(
+          nr === red.r &&
+          nc === red.c
+        ){
+
+          soundError();
+
+          return;
+
+        }
+
+
+        blue.r =
+          nr;
+
+
+        blue.c =
+          nc;
+
+
+        soundMove();
+
+
+        positionPawn(
+          bluePawn,
+          blue,
+          true
+        );
+
+
+        usePlayerAction();
+
+
+        if(
+          blue.r === 0
+        ){
+
+          playFinalAnimation(
+            "blue"
+          );
+
+        }
+
+      }
+    );
+
+  }
+);
+
+
+/* =========================================================
+   WALL MODE
+========================================================= */
+
+wallModeBtn.addEventListener(
+  "click",
+  ()=>{
+
+    if(
+      gameOver ||
+      actionsLeft <= 0
+    ){
+
+      return;
+
+    }
+
+
+    if(
+      matchType === "online"
+    ){
+
+      if(
+        turn !== myRole
+      ){
+
+        return;
+
+      }
+
+
+      const ownWalls =
+        myRole === "blue"
+          ? blueWalls
+          : redWalls;
+
+
+      if(
+        ownWalls <= 0
+      ){
+
+        soundError();
+
+        return;
+
+      }
+
+    }
+
+    else{
+
+      if(
+        turn !== "blue"
+      ){
+
+        return;
+
+      }
+
+
+      if(
+        blueWalls <= 0
+      ){
+
+        soundError();
+
+        return;
+
+      }
+
+    }
+
+
+    wallMode =
+      !wallMode;
+
+
+    wallModeBtn.classList.toggle(
+      "active",
+      wallMode
+    );
+
+
+    renderWallSlots();
+
+  }
+);
+
+
+horizontalBtn.addEventListener(
+  "click",
+  ()=>{
+
+    wallOrientation =
+      "h";
+
+
+    horizontalBtn.classList.add(
+      "selected"
+    );
+
+
+    verticalBtn.classList.remove(
+      "selected"
+    );
+
+
+    renderWallSlots();
+
+  }
+);
+
+
+verticalBtn.addEventListener(
+  "click",
+  ()=>{
+
+    wallOrientation =
+      "v";
+
+
+    verticalBtn.classList.add(
+      "selected"
+    );
+
+
+    horizontalBtn.classList.remove(
+      "selected"
+    );
+
+
+    renderWallSlots();
+
+  }
+);
+
+
+function closeWallMode(){
+
+  wallMode =
+    false;
+
+
+  wallModeBtn.classList.remove(
+    "active"
+  );
+
+
+  slotLayer.innerHTML =
+    "";
+
+}
+
+
+/* =========================================================
+   PLAYER WALL
+========================================================= */
+
+async function tryPlayerWall(
+  type,
+  r,
+  c
+){
+
+  if(
+    gameOver ||
+    actionsLeft <= 0
+  ){
+
+    return;
+
+  }
+
+
+  if(
+    matchType === "online"
+  ){
+
+    await onlinePlaceWall(
+      type,
+      r,
+      c
+    );
+
+
+    return;
+
+  }
+
+
+  if(
+    turn !== "blue" ||
+    blueWalls <= 0
+  ){
+
+    return;
+
+  }
+
+
+  if(
+    !canPlaceWallBasic(
+      type,
+      r,
+      c
+    )
+  ){
+
+    soundError();
+
+    return;
+
+  }
+
+
+  const walls =
+    type === "h"
+      ? hWalls
+      : vWalls;
+
+
+  const k =
+    key(
+      r,
+      c
+    );
+
+
+  walls.set(
+    k,
+    "blue"
+  );
+
+
+  if(
+    !bothPlayersHavePath()
+  ){
+
+    walls.delete(
+      k
+    );
+
+
+    soundError();
+
+    return;
+
+  }
+
+
+  blueWalls--;
+
+
+  newestWall = {
+
+    type:type,
+    r:r,
+    c:c
+
+  };
+
+
+  closeWallMode();
+
+
+  soundWall();
+
+
+  renderWalls();
+
+
+  blueWallsText.textContent =
+    blueWalls;
+
+
+  usePlayerAction();
+
+}
+
+
+/* =========================================================
+   PLAYER ACTION BOT MODE
+========================================================= */
+
+function usePlayerAction(){
+
+  actionsLeft--;
+
+
+  if(
+    actionsLeft < 0
+  ){
+
+    actionsLeft =
+      0;
+
+  }
+
+
+  soundEnergy();
+
+
+  animateEnergyUse(
+    playerEnergy,
+    actionsLeft
+  );
+
+
+  if(
+    actionsLeft > 0
+  ){
+
+    return;
+
+  }
+
+
+  finishPlayerTurn();
+
+}
+
+
+/* =========================================================
+   FINISH PLAYER BOT
+========================================================= */
+
+function finishPlayerTurn(){
+
+  if(
+    matchType === "online"
+  ){
+
+    return;
+
+  }
+
+
+  cancelEndTurnHold();
+
+  closeWallMode();
+
+
+  disableGameControls(
+    true
+  );
+
+
+  controlsPanel.classList.add(
+    "disabled-view"
+  );
+
+
+  playerCard.classList.remove(
+    "active"
+  );
+
+
+  playerCard.classList.add(
+    "inactive"
+  );
+
+
+  playerState.textContent =
+    "WAITING";
+
+
+  setTimeout(
+    startBotTurn,
+    600
+  );
+
+}
+
+
+/* =========================================================
+   BOT PLAYER TURN
+========================================================= */
 
 function preparePlayerTurn(){
+
+  if(
+    matchType === "online"
+  ){
+
+    return;
+
+  }
+
 
   if(gameOver){
 
@@ -2419,462 +4277,16 @@ function preparePlayerTurn(){
 }
 
 
-/* =========================
-   PLAYER MOVE
-========================= */
-
-moveButtons.forEach(
-  button=>{
-
-    button.addEventListener(
-      "click",
-      ()=>{
-
-        if(
-          gameOver ||
-          turn !== "blue" ||
-          actionsLeft <= 0
-        ){
-
-          return;
-
-        }
-
-
-        closeWallMode();
-
-
-        const direction =
-          button.dataset.dir;
-
-
-        let nr =
-          blue.r;
-
-
-        let nc =
-          blue.c;
-
-
-        if(
-          direction === "up"
-        ){
-          nr--;
-        }
-
-
-        if(
-          direction === "down"
-        ){
-          nr++;
-        }
-
-
-        if(
-          direction === "left"
-        ){
-          nc--;
-        }
-
-
-        if(
-          direction === "right"
-        ){
-          nc++;
-        }
-
-
-        if(
-          !isInside(
-            nr,
-            nc
-          )
-          ||
-          blocked(
-            blue.r,
-            blue.c,
-            nr,
-            nc
-          )
-        ){
-
-          soundError();
-
-          return;
-
-        }
-
-
-        if(
-          nr === red.r &&
-          nc === red.c
-        ){
-
-          soundError();
-
-          return;
-
-        }
-
-
-        blue.r =
-          nr;
-
-
-        blue.c =
-          nc;
-
-
-        soundMove();
-
-
-        positionPawn(
-          bluePawn,
-          blue,
-          true
-        );
-
-
-        usePlayerAction();
-
-
-        if(
-          blue.r === 0
-        ){
-
-          playFinalAnimation(
-            "blue"
-          );
-
-        }
-
-      }
-    );
-
-  }
-);
-
-
-/* =========================
-   WALL MODE
-========================= */
-
-wallModeBtn.addEventListener(
-  "click",
-  ()=>{
-
-    if(
-      gameOver ||
-      turn !== "blue" ||
-      actionsLeft <= 0
-    ){
-
-      return;
-
-    }
-
-
-    if(
-      blueWalls <= 0
-    ){
-
-      soundError();
-
-      return;
-
-    }
-
-
-    wallMode =
-      !wallMode;
-
-
-    wallModeBtn
-      .classList
-      .toggle(
-        "active",
-        wallMode
-      );
-
-
-    renderWallSlots();
-
-  }
-);
-
-
-horizontalBtn.addEventListener(
-  "click",
-  ()=>{
-
-    wallOrientation =
-      "h";
-
-
-    horizontalBtn
-      .classList
-      .add(
-        "selected"
-      );
-
-
-    verticalBtn
-      .classList
-      .remove(
-        "selected"
-      );
-
-
-    renderWallSlots();
-
-  }
-);
-
-
-verticalBtn.addEventListener(
-  "click",
-  ()=>{
-
-    wallOrientation =
-      "v";
-
-
-    verticalBtn
-      .classList
-      .add(
-        "selected"
-      );
-
-
-    horizontalBtn
-      .classList
-      .remove(
-        "selected"
-      );
-
-
-    renderWallSlots();
-
-  }
-);
-
-
-function closeWallMode(){
-
-  wallMode =
-    false;
-
-
-  wallModeBtn
-    .classList
-    .remove(
-      "active"
-    );
-
-
-  slotLayer.innerHTML =
-    "";
-
-}
-
-
-/* =========================
-   PLAYER WALL
-========================= */
-
-function tryPlayerWall(
-  type,
-  r,
-  c
-){
-
-  if(
-    gameOver ||
-    turn !== "blue" ||
-    actionsLeft <= 0 ||
-    blueWalls <= 0
-  ){
-
-    return;
-
-  }
-
-
-  if(
-    !canPlaceWallBasic(
-      type,
-      r,
-      c
-    )
-  ){
-
-    soundError();
-
-    return;
-
-  }
-
-
-  const walls =
-    type === "h"
-    ?
-    hWalls
-    :
-    vWalls;
-
-
-  const k =
-    key(
-      r,
-      c
-    );
-
-
-  walls.set(
-    k,
-    "blue"
-  );
-
-
-  if(
-    !bothPlayersHavePath()
-  ){
-
-    walls.delete(
-      k
-    );
-
-
-    soundError();
-
-    return;
-
-  }
-
-
-  blueWalls--;
-
-
-  newestWall = {
-
-    type:type,
-    r:r,
-    c:c
-
-  };
-
-
-  closeWallMode();
-
-
-  soundWall();
-
-
-  renderWalls();
-
-
-  blueWallsText.textContent =
-    blueWalls;
-
-
-  usePlayerAction();
-
-}
-
-
-/* =========================
-   PLAYER ACTION
-========================= */
-
-function usePlayerAction(){
-
-  actionsLeft--;
-
-
-  if(
-    actionsLeft < 0
-  ){
-
-    actionsLeft =
-      0;
-
-  }
-
-
-  soundEnergy();
-
-
-  animateEnergyUse(
-    playerEnergy,
-    actionsLeft
-  );
-
-
-  if(
-    actionsLeft > 0
-  ){
-
-    return;
-
-  }
-
-
-  finishPlayerTurn();
-
-}
-
-
-/* =========================
-   FINISH PLAYER
-========================= */
-
-function finishPlayerTurn(){
-
-  cancelEndTurnHold();
-
-
-  closeWallMode();
-
-
-  disableGameControls(
-    true
-  );
-
-
-  controlsPanel.classList.add(
-    "disabled-view"
-  );
-
-
-  playerCard.classList.remove(
-    "active"
-  );
-
-
-  playerCard.classList.add(
-    "inactive"
-  );
-
-
-  playerState.textContent =
-    "WAITING";
-
-
-  setTimeout(
-    startBotTurn,
-    600
-  );
-
-}
-
-
-/* =========================
+/* =========================================================
    BOT TURN
-========================= */
+========================================================= */
 
 function startBotTurn(){
 
-  if(gameOver){
+  if(
+    matchType === "online" ||
+    gameOver
+  ){
 
     return;
 
@@ -2920,13 +4332,14 @@ function startBotTurn(){
 }
 
 
-/* =========================
+/* =========================================================
    BOT ACTION
-========================= */
+========================================================= */
 
 function botAction(){
 
   if(
+    matchType === "online" ||
     gameOver ||
     turn !== "red" ||
     actionsLeft <= 0
@@ -3022,10 +4435,8 @@ function botAction(){
 
         const walls =
           bestWall.type === "h"
-          ?
-          hWalls
-          :
-          vWalls;
+            ? hWalls
+            : vWalls;
 
 
         walls.set(
@@ -3055,7 +4466,6 @@ function botAction(){
 
 
         soundWall();
-
 
         renderWalls();
 
@@ -3129,22 +4539,11 @@ function botAction(){
         );
 
 
-        if(
+        botState.textContent =
           moveResult ===
           "approached"
-        ){
-
-          botState.textContent =
-            "APPROACHING";
-
-        }
-
-        else{
-
-          botState.textContent =
-            "MOVED";
-
-        }
+            ? "APPROACHING"
+            : "MOVED";
 
 
         if(
@@ -3195,13 +4594,16 @@ function botAction(){
 }
 
 
-/* =========================
+/* =========================================================
    BOT TIMING
-========================= */
+========================================================= */
 
 function scheduleNextBotAction(){
 
-  if(gameOver){
+  if(
+    matchType === "online" ||
+    gameOver
+  ){
 
     return;
 
@@ -3239,9 +4641,9 @@ function scheduleNextBotAction(){
 }
 
 
-/* =========================
+/* =========================================================
    BOT WALL AI
-========================= */
+========================================================= */
 
 function findBestBotWall(
   blueBefore,
@@ -3284,10 +4686,8 @@ function findBestBotWall(
 
         const walls =
           type === "h"
-          ?
-          hWalls
-          :
-          vWalls;
+            ? hWalls
+            : vWalls;
 
 
         const k =
@@ -3430,9 +4830,427 @@ function findBestBotWall(
 }
 
 
-/* =========================
+/* =========================================================
+   BOT PATH HELPERS
+========================================================= */
+
+function shortestPathAvoidPlayer(
+  start,
+  targetRow,
+  avoid
+){
+
+  const startKey =
+    key(
+      start.r,
+      start.c
+    );
+
+
+  const queue = [
+    {
+      r:start.r,
+      c:start.c
+    }
+  ];
+
+
+  const visited =
+    new Set([
+      startKey
+    ]);
+
+
+  const parent = {};
+
+
+  let finalKey =
+    null;
+
+
+  while(queue.length){
+
+    const current =
+      queue.shift();
+
+
+    if(
+      current.r ===
+      targetRow
+    ){
+
+      finalKey =
+        key(
+          current.r,
+          current.c
+        );
+
+
+      break;
+
+    }
+
+
+    for(
+      const next
+      of getNeighbors(
+        current
+      )
+    ){
+
+      if(
+        avoid &&
+        next.r === avoid.r &&
+        next.c === avoid.c
+      ){
+
+        continue;
+
+      }
+
+
+      const k =
+        key(
+          next.r,
+          next.c
+        );
+
+
+      if(
+        visited.has(k)
+      ){
+
+        continue;
+
+      }
+
+
+      visited.add(k);
+
+
+      parent[k] =
+        key(
+          current.r,
+          current.c
+        );
+
+
+      queue.push(
+        next
+      );
+
+    }
+
+  }
+
+
+  if(!finalKey){
+
+    return null;
+
+  }
+
+
+  const path = [];
+
+
+  let current =
+    finalKey;
+
+
+  while(current){
+
+    const parts =
+      current
+        .split(",")
+        .map(Number);
+
+
+    path.push({
+      r:parts[0],
+      c:parts[1]
+    });
+
+
+    if(
+      current ===
+      startKey
+    ){
+
+      break;
+
+    }
+
+
+    current =
+      parent[current];
+
+  }
+
+
+  path.reverse();
+
+
+  return path;
+
+}
+
+
+function shortestPathToCellAvoidPlayer(
+  start,
+  target,
+  avoid
+){
+
+  const startKey =
+    key(
+      start.r,
+      start.c
+    );
+
+
+  const targetKey =
+    key(
+      target.r,
+      target.c
+    );
+
+
+  const queue = [
+    {
+      r:start.r,
+      c:start.c
+    }
+  ];
+
+
+  const visited =
+    new Set([
+      startKey
+    ]);
+
+
+  const parent = {};
+
+
+  let found =
+    false;
+
+
+  while(queue.length){
+
+    const current =
+      queue.shift();
+
+
+    const currentKey =
+      key(
+        current.r,
+        current.c
+      );
+
+
+    if(
+      currentKey ===
+      targetKey
+    ){
+
+      found =
+        true;
+
+
+      break;
+
+    }
+
+
+    for(
+      const next
+      of getNeighbors(
+        current
+      )
+    ){
+
+      if(
+        avoid &&
+        next.r === avoid.r &&
+        next.c === avoid.c
+      ){
+
+        continue;
+
+      }
+
+
+      const k =
+        key(
+          next.r,
+          next.c
+        );
+
+
+      if(
+        visited.has(k)
+      ){
+
+        continue;
+
+      }
+
+
+      visited.add(k);
+
+
+      parent[k] =
+        currentKey;
+
+
+      queue.push(
+        next
+      );
+
+    }
+
+  }
+
+
+  if(!found){
+
+    return null;
+
+  }
+
+
+  const path = [];
+
+
+  let current =
+    targetKey;
+
+
+  while(current){
+
+    const parts =
+      current
+        .split(",")
+        .map(Number);
+
+
+    path.push({
+      r:parts[0],
+      c:parts[1]
+    });
+
+
+    if(
+      current ===
+      startKey
+    ){
+
+      break;
+
+    }
+
+
+    current =
+      parent[current];
+
+  }
+
+
+  path.reverse();
+
+
+  return path;
+
+}
+
+
+function pathTowardPlayer(){
+
+  const aroundBlue = [
+
+    {
+      r:blue.r-1,
+      c:blue.c
+    },
+
+    {
+      r:blue.r+1,
+      c:blue.c
+    },
+
+    {
+      r:blue.r,
+      c:blue.c-1
+    },
+
+    {
+      r:blue.r,
+      c:blue.c+1
+    }
+
+  ];
+
+
+  let bestPath =
+    null;
+
+
+  for(
+    const target
+    of aroundBlue
+  ){
+
+    if(
+      !isInside(
+        target.r,
+        target.c
+      )
+    ){
+
+      continue;
+
+    }
+
+
+    const path =
+      shortestPathToCellAvoidPlayer(
+        red,
+        target,
+        blue
+      );
+
+
+    if(!path){
+
+      continue;
+
+    }
+
+
+    if(
+      !bestPath ||
+      path.length <
+      bestPath.length
+    ){
+
+      bestPath =
+        path;
+
+    }
+
+  }
+
+
+  return bestPath;
+
+}
+
+
+/* =========================================================
    BOT SMART MOVE
-========================= */
+========================================================= */
 
 function botSmartMove(){
 
@@ -3497,9 +5315,9 @@ function botSmartMove(){
 }
 
 
-/* =========================
+/* =========================================================
    CONTROLS
-========================= */
+========================================================= */
 
 function disableGameControls(
   disabled
@@ -3518,10 +5336,8 @@ function disableGameControls(
   wallModeBtn.disabled =
     disabled;
 
-
   horizontalBtn.disabled =
     disabled;
-
 
   verticalBtn.disabled =
     disabled;
@@ -3529,13 +5345,22 @@ function disableGameControls(
 }
 
 
-/* =========================
-   FINAL
-========================= */
+/* =========================================================
+   BOT FINAL
+========================================================= */
 
 function playFinalAnimation(
   winner
 ){
+
+  if(
+    matchType === "online"
+  ){
+
+    return;
+
+  }
+
 
   gameOver =
     true;
@@ -3543,9 +5368,7 @@ function playFinalAnimation(
 
   cancelEndTurnHold();
 
-
   closeWallMode();
-
 
   disableGameControls(
     true
@@ -3554,10 +5377,8 @@ function playFinalAnimation(
 
   const pawn =
     winner === "blue"
-    ?
-    bluePawn
-    :
-    redPawn;
+      ? bluePawn
+      : redPawn;
 
 
   pawn.classList.add(
@@ -3567,19 +5388,15 @@ function playFinalAnimation(
 
   board.classList.add(
     winner === "blue"
-    ?
-    "blue-finish"
-    :
-    "red-finish"
+      ? "blue-finish"
+      : "red-finish"
   );
 
 
   const targetRow =
     winner === "blue"
-    ?
-    0
-    :
-    SIZE-1;
+      ? 0
+      : SIZE-1;
 
 
   for(
@@ -3589,13 +5406,10 @@ function playFinalAnimation(
   ){
 
     cells[targetRow][c]
-      .classList
-      .add(
+      .classList.add(
         winner === "blue"
-        ?
-        "goal-flash-blue"
-        :
-        "goal-flash-red"
+          ? "goal-flash-blue"
+          : "goal-flash-red"
       );
 
   }
@@ -3618,19 +5432,17 @@ function playFinalAnimation(
 }
 
 
-/* =========================
-   RESULT
-========================= */
+/* =========================================================
+   BOT RESULT
+========================================================= */
 
 function showResult(
   winner
 ){
 
-  resultOverlay
-    .classList
-    .remove(
-      "hidden"
-    );
+  resultOverlay.classList.remove(
+    "hidden"
+  );
 
 
   if(
@@ -3668,17 +5480,99 @@ function showResult(
 }
 
 
-/* =========================
-   RESET
-========================= */
+/* =========================================================
+   ONLINE RESULT
+========================================================= */
 
-document
-.getElementById(
-  "restartBtn"
-)
-.addEventListener(
+function showOnlineResult(
+  winnerRole
+){
+
+  gameOver =
+    true;
+
+
+  closeWallMode();
+
+  cancelEndTurnHold();
+
+  disableGameControls(
+    true
+  );
+
+
+  soundWin();
+
+
+  resultOverlay.classList.remove(
+    "hidden"
+  );
+
+
+  if(
+    winnerRole === myRole
+  ){
+
+    resultIcon.textContent =
+      "🏆";
+
+
+    resultTitle.textContent =
+      "YOU WIN!";
+
+
+    resultText.textContent =
+      "You beat your opponent 🔥";
+
+  }
+
+  else{
+
+    resultIcon.textContent =
+      "💀";
+
+
+    resultTitle.textContent =
+      "YOU LOST";
+
+
+    resultText.textContent =
+      (
+        activeMatch?.opponentUsername ||
+        "Opponent"
+      ) +
+      " reached your side first.";
+
+  }
+
+}
+
+
+/* =========================================================
+   RESTART
+========================================================= */
+
+restartBtn.addEventListener(
   "click",
-  ()=>{
+  async ()=>{
+
+    /*
+      Online revenge نخدموها
+      من بعد بنظام rematch.
+    */
+
+    if(
+      matchType === "online"
+    ){
+
+      window.location.replace(
+        "home.html"
+      );
+
+
+      return;
+
+    }
 
 
     cancelEndTurnHold();
@@ -3726,7 +5620,6 @@ document
 
     hWalls.clear();
 
-
     vWalls.clear();
 
 
@@ -3746,6 +5639,10 @@ document
       "";
 
 
+    board.style.transform =
+      "none";
+
+
     for(
       let r=0;
       r<SIZE;
@@ -3759,8 +5656,7 @@ document
       ){
 
         cells[r][c]
-          .classList
-          .remove(
+          .classList.remove(
             "goal-flash-blue",
             "goal-flash-red"
           );
@@ -3770,25 +5666,19 @@ document
     }
 
 
-    horizontalBtn
-      .classList
-      .add(
-        "selected"
-      );
+    horizontalBtn.classList.add(
+      "selected"
+    );
 
 
-    verticalBtn
-      .classList
-      .remove(
-        "selected"
-      );
+    verticalBtn.classList.remove(
+      "selected"
+    );
 
 
-    resultOverlay
-      .classList
-      .add(
-        "hidden"
-      );
+    resultOverlay.classList.add(
+      "hidden"
+    );
 
 
     renderAll();
@@ -3800,9 +5690,154 @@ document
 );
 
 
-/* =========================
+/* =========================================================
+   BOT UI
+========================================================= */
+
+function setupBotUI(){
+
+  const me =
+    readMyProfile();
+
+
+  if(me){
+
+    myGameName.textContent =
+      me.username ||
+      "YOU";
+
+
+    myGameAvatar.textContent =
+      me.avatar ||
+      "🔵";
+
+  }
+
+
+  opponentName.textContent =
+    "BOT";
+
+
+  opponentAvatar.textContent =
+    "🤖";
+
+
+  botState.textContent =
+    "Waiting...";
+
+}
+
+
+/* =========================================================
+   AUTH + START
+========================================================= */
+
+onAuthStateChanged(
+  auth,
+  async user=>{
+
+    if(!user){
+
+      window.location.replace(
+        "auth.html"
+      );
+
+
+      return;
+
+    }
+
+
+    firebaseUser =
+      user;
+
+
+    activeMatch =
+      readActiveMatch();
+
+
+    /*
+      Ila ma kayn ta match,
+      ma ndkhlouch game direct.
+    */
+
+    if(
+      !activeMatch ||
+      !activeMatch.type
+    ){
+
+      window.location.replace(
+        "home.html"
+      );
+
+
+      return;
+
+    }
+
+
+    matchType =
+      activeMatch.type;
+
+
+    matchId =
+      activeMatch.matchId ||
+      null;
+
+
+    if(
+      matchType === "online"
+    ){
+
+      try{
+
+        await initOnlineGame();
+
+
+        buildBoard();
+
+      }
+
+      catch(error){
+
+        console.error(
+          "ONLINE INIT ERROR:",
+          error
+        );
+
+
+        window.location.replace(
+          "home.html"
+        );
+
+      }
+
+
+      return;
+
+    }
+
+
+    /*
+      BOT fallback.
+    */
+
+    matchType =
+      "bot";
+
+
+    setupBotUI();
+
+
+    buildBoard();
+
+  }
+);
+
+
+/* =========================================================
    RESIZE
-========================= */
+========================================================= */
 
 window.addEventListener(
   "resize",
@@ -3814,10 +5849,3 @@ window.addEventListener(
 
   }
 );
-
-
-/* =========================
-   START
-========================= */
-
-buildBoard();
