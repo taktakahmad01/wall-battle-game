@@ -24,15 +24,21 @@ import {
 } from
   "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
+
 import {
   getDatabase,
   ref,
   set,
   remove,
+  update,
   onValue,
+  get,
+  onDisconnect,
   serverTimestamp as rtdbServerTimestamp
 } from
   "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+
 /* =========================
    FIREBASE CONFIG
 ========================= */
@@ -85,8 +91,14 @@ const db =
   );
 
 
+const realtimeDb =
+  getDatabase(
+    app
+  );
+
+
 /* =========================
-   HOME DOM
+   DOM
 ========================= */
 
 const avatarEmoji =
@@ -193,24 +205,54 @@ let currentPlayer =
 
 
 /* =========================
-   HOME STATUS
+   MATCH STATE
+========================= */
+
+let matchRunning =
+  false;
+
+let matchFinished =
+  false;
+
+let dotsTimer =
+  null;
+
+let enterTimer =
+  null;
+
+let botFallbackTimer =
+  null;
+
+let queueListenerOff =
+  null;
+
+let assignmentListenerOff =
+  null;
+
+let audioContext =
+  null;
+
+let matchingBusy =
+  false;
+
+
+/* =========================
+   STATUS
 ========================= */
 
 function setStatus(
   text
 ){
 
-  const textElement =
+  const element =
     homeStatus.querySelector(
       "span:last-child"
     );
 
 
-  if(
-    textElement
-  ){
+  if(element){
 
-    textElement.textContent =
+    element.textContent =
       text;
 
   }
@@ -259,10 +301,6 @@ async function loadPlayerProfile(
     data;
 
 
-  /* =========================
-     SHOW DATA IN HOME
-  ========================== */
-
   avatarEmoji.textContent =
     data.avatar ||
     "😎";
@@ -289,34 +327,43 @@ async function loadPlayerProfile(
     );
 
 
-  /*
-    Match overlay avatar
-    يكون نفس avatar ديال account.
-  */
-
   matchAvatar.textContent =
     data.avatar ||
     "😎";
 
-
-  /*
-    Cache خفيفة فقط.
-    Firebase يبقى source الحقيقي.
-  */
 
   try{
 
     localStorage.setItem(
       "wallBattlePlayer",
       JSON.stringify({
-        uid:user.uid,
-        username:data.username || "",
-        avatar:data.avatar || "😎",
-        gender:data.gender || "",
-        countryCode:data.countryCode || "",
-        countryName:data.countryName || "",
-        countryFlag:data.countryFlag || "",
-        wins:Number(data.wins || 0)
+
+        uid:
+          user.uid,
+
+        username:
+          data.username || "",
+
+        avatar:
+          data.avatar || "😎",
+
+        gender:
+          data.gender || "",
+
+        countryCode:
+          data.countryCode || "",
+
+        countryName:
+          data.countryName || "",
+
+        countryFlag:
+          data.countryFlag || "",
+
+        wins:
+          Number(
+            data.wins || 0
+          )
+
       })
     );
 
@@ -324,10 +371,6 @@ async function loadPlayerProfile(
 
   catch(error){}
 
-
-  /*
-    lastSeen مسموح به فالRules ديالنا.
-  */
 
   try{
 
@@ -344,7 +387,7 @@ async function loadPlayerProfile(
   catch(error){
 
     console.warn(
-      "Could not update lastSeen:",
+      "LAST SEEN ERROR:",
       error
     );
 
@@ -354,17 +397,12 @@ async function loadPlayerProfile(
 
 
 /* =========================
-   AUTH CHECK
+   AUTH
 ========================= */
 
 onAuthStateChanged(
   auth,
   async user=>{
-
-    /*
-      ما عندوش session:
-      يرجع Auth.
-    */
 
     if(
       !user
@@ -404,7 +442,7 @@ onAuthStateChanged(
     catch(error){
 
       console.error(
-        "PROFILE LOAD ERROR:",
+        "PROFILE ERROR:",
         error
       );
 
@@ -435,68 +473,7 @@ onAuthStateChanged(
 
 
 /* =========================
-   ROOM CODE
-========================= */
-
-function generateRoomCode(){
-
-  const chars =
-    "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-
-
-  let code =
-    "";
-
-
-  for(
-    let i=0;
-    i<6;
-    i++
-  ){
-
-    const randomIndex =
-      Math.floor(
-        Math.random() *
-        chars.length
-      );
-
-
-    code +=
-      chars[randomIndex];
-
-  }
-
-
-  return code;
-
-}
-
-
-/* =========================
-   MATCH STATE
-========================= */
-
-let matchRunning =
-  false;
-
-let matchFinished =
-  false;
-
-let dotsTimer =
-  null;
-
-let searchTimer =
-  null;
-
-let enterTimer =
-  null;
-
-let audioContext =
-  null;
-
-
-/* =========================
-   MATCH AUDIO
+   AUDIO
 ========================= */
 
 function getAudio(){
@@ -510,9 +487,7 @@ function getAudio(){
       window.webkitAudioContext;
 
 
-    if(
-      AC
-    ){
+    if(AC){
 
       audioContext =
         new AC();
@@ -579,8 +554,7 @@ function tone(
   const start =
     ctx.currentTime +
     (
-      delay ||
-      0
+      delay || 0
     );
 
 
@@ -601,16 +575,15 @@ function tone(
 
   gain.gain
     .exponentialRampToValueAtTime(
-      volume ||
-      .025,
-      start+.01
+      volume || .025,
+      start + .01
     );
 
 
   gain.gain
     .exponentialRampToValueAtTime(
       .0001,
-      start+duration
+      start + duration
     );
 
 
@@ -630,8 +603,8 @@ function tone(
 
 
   osc.stop(
-    start+
-    duration+
+    start +
+    duration +
     .04
   );
 
@@ -670,7 +643,7 @@ function matchFoundSound(){
 
 
 /* =========================
-   RESET MATCH UI
+   MATCH UI
 ========================= */
 
 function resetMatchUI(){
@@ -718,7 +691,7 @@ function resetMatchUI(){
 
 
 /* =========================
-   STOP MATCH TIMERS
+   TIMERS / LISTENERS
 ========================= */
 
 function stopMatchTimers(){
@@ -738,20 +711,6 @@ function stopMatchTimers(){
 
 
   if(
-    searchTimer
-  ){
-
-    clearTimeout(
-      searchTimer
-    );
-
-    searchTimer =
-      null;
-
-  }
-
-
-  if(
     enterTimer
   ){
 
@@ -764,14 +723,95 @@ function stopMatchTimers(){
 
   }
 
+
+  if(
+    botFallbackTimer
+  ){
+
+    clearTimeout(
+      botFallbackTimer
+    );
+
+    botFallbackTimer =
+      null;
+
+  }
+
+}
+
+
+function stopFirebaseListeners(){
+
+  if(
+    queueListenerOff
+  ){
+
+    queueListenerOff();
+
+    queueListenerOff =
+      null;
+
+  }
+
+
+  if(
+    assignmentListenerOff
+  ){
+
+    assignmentListenerOff();
+
+    assignmentListenerOff =
+      null;
+
+  }
+
 }
 
 
 /* =========================
-   CANCEL MATCH
+   REMOVE OWN QUEUE
 ========================= */
 
-function cancelMatch(){
+async function removeOwnQueue(){
+
+  if(
+    !currentUser
+  ){
+
+    return;
+
+  }
+
+
+  try{
+
+    await remove(
+      ref(
+        realtimeDb,
+        "gameV2/matchmaking/" +
+        currentUser.uid
+      )
+    );
+
+  }
+
+  catch(error){
+
+    console.warn(
+      "QUEUE REMOVE ERROR:",
+      error
+    );
+
+  }
+
+}
+
+
+/* =========================
+   CANCEL
+========================= */
+
+async function cancelMatch(){
 
   matchRunning =
     false;
@@ -779,8 +819,16 @@ function cancelMatch(){
   matchFinished =
     false;
 
+  matchingBusy =
+    false;
+
 
   stopMatchTimers();
+
+  stopFirebaseListeners();
+
+
+  await removeOwnQueue();
 
 
   matchOverlay
@@ -801,13 +849,130 @@ function cancelMatch(){
 
 
 /* =========================
-   MATCH FOUND
+   SELECT OPPONENT
 ========================= */
 
-function matchFound(){
+function chooseOpponent(
+  players
+){
 
   if(
-    !matchRunning ||
+    !currentPlayer
+  ){
+
+    return null;
+
+  }
+
+
+  const myGender =
+    currentPlayer.gender;
+
+
+  /*
+    90% opposite gender
+    10% same gender.
+  */
+
+  const preferOpposite =
+    Math.random() <
+    .90;
+
+
+  const preferred =
+    players.filter(
+      player=>{
+
+        if(
+          preferOpposite
+        ){
+
+          return (
+            player.gender !==
+            myGender
+          );
+
+        }
+
+
+        return (
+          player.gender ===
+          myGender
+        );
+
+      }
+    );
+
+
+  /*
+    إلا النوع المفضل ما موجودش،
+    ناخدو أي player متوفر.
+  */
+
+  const pool =
+    preferred.length
+    ?
+    preferred
+    :
+    players;
+
+
+  if(
+    !pool.length
+  ){
+
+    return null;
+
+  }
+
+
+  /*
+    الأقدم فالqueue أولاً.
+  */
+
+  pool.sort(
+    (a,b)=>{
+
+      return (
+        Number(
+          a.joinedAt || 0
+        )
+        -
+        Number(
+          b.joinedAt || 0
+        )
+      );
+
+    }
+  );
+
+
+  return pool[0];
+
+}
+
+
+/* =========================
+   CREATE REAL MATCH
+========================= */
+
+async function createRealMatch(
+  opponent
+){
+
+  if(
+    !currentUser ||
+    !currentPlayer ||
+    !opponent
+  ){
+
+    return;
+
+  }
+
+
+  if(
+    matchingBusy ||
     matchFinished
   ){
 
@@ -816,62 +981,212 @@ function matchFound(){
   }
 
 
-  matchFinished =
+  matchingBusy =
     true;
 
 
-  if(
-    dotsTimer
-  ){
+  try{
 
-    clearInterval(
-      dotsTimer
+    /*
+      قبل إنشاء match نشوف واش
+      opponent مازال فالqueue.
+    */
+
+    const opponentQueueRef =
+      ref(
+        realtimeDb,
+        "gameV2/matchmaking/" +
+        opponent.uid
+      );
+
+
+    const opponentSnap =
+      await get(
+        opponentQueueRef
+      );
+
+
+    if(
+      !opponentSnap.exists()
+    ){
+
+      matchingBusy =
+        false;
+
+      return;
+
+    }
+
+
+    /*
+      Match ID ثابت للجوج.
+    */
+
+    const ids = [
+      currentUser.uid,
+      opponent.uid
+    ].sort();
+
+
+    const matchId =
+      ids[0] +
+      "_" +
+      ids[1] +
+      "_" +
+      Date.now();
+
+
+    const rootRef =
+      ref(
+        realtimeDb,
+        "gameV2"
+      );
+
+
+    /*
+      Assign نفس match للجوج.
+    */
+
+    const updates = {};
+
+
+    updates[
+      "matchAssignments/" +
+      currentUser.uid
+    ] = {
+
+      matchId:
+        matchId,
+
+      opponentUid:
+        opponent.uid,
+
+      opponentUsername:
+        opponent.username || "Player",
+
+      opponentAvatar:
+        opponent.avatar || "😎",
+
+      opponentGender:
+        opponent.gender || "",
+
+      type:
+        "online",
+
+      createdAt:
+        rtdbServerTimestamp()
+
+    };
+
+
+    updates[
+      "matchAssignments/" +
+      opponent.uid
+    ] = {
+
+      matchId:
+        matchId,
+
+      opponentUid:
+        currentUser.uid,
+
+      opponentUsername:
+        currentPlayer.username || "Player",
+
+      opponentAvatar:
+        currentPlayer.avatar || "😎",
+
+      opponentGender:
+        currentPlayer.gender || "",
+
+      type:
+        "online",
+
+      createdAt:
+        rtdbServerTimestamp()
+
+    };
+
+
+    /*
+      Match metadata.
+    */
+
+    updates[
+      "rooms/" +
+      matchId
+    ] = {
+
+      id:
+        matchId,
+
+      type:
+        "online",
+
+      status:
+        "starting",
+
+      player1:
+        currentUser.uid,
+
+      player2:
+        opponent.uid,
+
+      createdAt:
+        rtdbServerTimestamp()
+
+    };
+
+
+    await update(
+      rootRef,
+      updates
     );
-
-    dotsTimer =
-      null;
 
   }
 
+  catch(error){
 
-  matchScanner
-    .classList
-    .add(
-      "found"
+    console.error(
+      "CREATE REAL MATCH ERROR:",
+      error
+    );
+
+  }
+
+  finally{
+
+    matchingBusy =
+      false;
+
+  }
+
+}
+
+
+/* =========================
+   WATCH QUEUE
+========================= */
+
+function watchMatchmakingQueue(){
+
+  const queueRef =
+    ref(
+      realtimeDb,
+      "gameV2/matchmaking"
     );
 
 
-  matchFoundBadge
-    .classList
-    .add(
-      "show"
-    );
-
-
-  matchSearchText
-    .classList
-    .add(
-      "found"
-    );
-
-
-  matchSearchText.textContent =
-    "MATCH FOUND! ⚔️";
-
-
-  matchSubtext.textContent =
-    "Opponent ready";
-
-
-  matchFoundSound();
-
-
-  enterTimer =
-    setTimeout(
-      ()=>{
+  queueListenerOff =
+    onValue(
+      queueRef,
+      snapshot=>{
 
         if(
-          !matchRunning
+          !matchRunning ||
+          matchFinished ||
+          matchingBusy ||
+          !snapshot.exists()
         ){
 
           return;
@@ -879,30 +1194,344 @@ function matchFound(){
         }
 
 
-        matchRunning =
-          false;
+        const players =
+          [];
 
 
-        window.location.href =
-          "game.html";
+        snapshot.forEach(
+          child=>{
 
-      },
-      1050
+            const value =
+              child.val();
+
+
+            if(
+              !value
+            ){
+
+              return;
+
+            }
+
+
+            if(
+              child.key ===
+              currentUser.uid
+            ){
+
+              return;
+
+            }
+
+
+            players.push({
+              ...value,
+              uid:child.key
+            });
+
+          }
+        );
+
+
+        if(
+          !players.length
+        ){
+
+          return;
+
+        }
+
+
+        const opponent =
+          chooseOpponent(
+            players
+          );
+
+
+        if(
+          opponent
+        ){
+
+          createRealMatch(
+            opponent
+          );
+
+        }
+
+      }
     );
 
 }
 
 
 /* =========================
-   START MATCH
+   WATCH ASSIGNMENT
 ========================= */
 
-function startMatch(){
+function watchMyAssignment(){
+
+  const assignmentRef =
+    ref(
+      realtimeDb,
+      "gameV2/matchAssignments/" +
+      currentUser.uid
+    );
+
+
+  assignmentListenerOff =
+    onValue(
+      assignmentRef,
+      async snapshot=>{
+
+        if(
+          !matchRunning ||
+          matchFinished ||
+          !snapshot.exists()
+        ){
+
+          return;
+
+        }
+
+
+        const assignment =
+          snapshot.val();
+
+
+        if(
+          !assignment ||
+          !assignment.matchId
+        ){
+
+          return;
+
+        }
+
+
+        matchFinished =
+          true;
+
+
+        stopMatchTimers();
+
+        stopFirebaseListeners();
+
+
+        await removeOwnQueue();
+
+
+        /*
+          نحفظ معلومات match
+          باش game.js تقراهم من بعد.
+        */
+
+        try{
+
+          localStorage.setItem(
+            "wallBattleActiveMatch",
+            JSON.stringify(
+              assignment
+            )
+          );
+
+        }
+
+        catch(error){}
+
+
+        matchScanner
+          .classList
+          .add(
+            "found"
+          );
+
+
+        matchFoundBadge
+          .classList
+          .add(
+            "show"
+          );
+
+
+        matchSearchText
+          .classList
+          .add(
+            "found"
+          );
+
+
+        matchSearchText.textContent =
+          "MATCH FOUND! ⚔️";
+
+
+        matchSubtext.textContent =
+          assignment.opponentUsername
+          ?
+          "VS " +
+          assignment.opponentUsername
+          :
+          "Opponent ready";
+
+
+        matchFoundSound();
+
+
+        enterTimer =
+          setTimeout(
+            ()=>{
+
+              matchRunning =
+                false;
+
+
+              window.location.href =
+                "game.html";
+
+            },
+            1050
+          );
+
+      }
+    );
+
+}
+
+
+/* =========================
+   BOT FALLBACK
+========================= */
+
+function startBotFallbackTimer(){
 
   /*
-    ما نبدأوش حتى profile تكون
-    جاية من Firebase.
+    إلا ما لقيناش real player
+    بعد 8 ثواني،
+    حالياً ندخلو للـBOT القديم.
+
+    من بعد نقدر نخلي user
+    يختار واش يبغي BOT.
   */
+
+  botFallbackTimer =
+    setTimeout(
+      async ()=>{
+
+        if(
+          !matchRunning ||
+          matchFinished
+        ){
+
+          return;
+
+        }
+
+
+        matchFinished =
+          true;
+
+
+        stopFirebaseListeners();
+
+
+        await removeOwnQueue();
+
+
+        const botMatch = {
+
+          matchId:
+            "bot_" +
+            currentUser.uid +
+            "_" +
+            Date.now(),
+
+          opponentUid:
+            "BOT",
+
+          opponentUsername:
+            "BOT",
+
+          opponentAvatar:
+            "🔴",
+
+          type:
+            "bot"
+
+        };
+
+
+        try{
+
+          localStorage.setItem(
+            "wallBattleActiveMatch",
+            JSON.stringify(
+              botMatch
+            )
+          );
+
+        }
+
+        catch(error){}
+
+
+        matchScanner
+          .classList
+          .add(
+            "found"
+          );
+
+
+        matchFoundBadge
+          .classList
+          .add(
+            "show"
+          );
+
+
+        matchSearchText
+          .classList
+          .add(
+            "found"
+          );
+
+
+        matchSearchText.textContent =
+          "BOT FOUND! 🤖";
+
+
+        matchSubtext.textContent =
+          "No player available";
+
+
+        matchFoundSound();
+
+
+        enterTimer =
+          setTimeout(
+            ()=>{
+
+              matchRunning =
+                false;
+
+
+              window.location.href =
+                "game.html";
+
+            },
+            1050
+          );
+
+      },
+      8000
+    );
+
+}
+
+
+/* =========================
+   START REAL MATCHMAKING
+========================= */
+
+async function startMatch(){
 
   if(
     !currentUser ||
@@ -915,8 +1544,22 @@ function startMatch(){
   }
 
 
+  if(
+    !currentPlayer.gender
+  ){
+
+    setStatus(
+      "Gender missing"
+    );
+
+    return;
+
+  }
+
+
   stopMatchTimers();
 
+  stopFirebaseListeners();
 
   resetMatchUI();
 
@@ -925,6 +1568,9 @@ function startMatch(){
     true;
 
   matchFinished =
+    false;
+
+  matchingBusy =
     false;
 
 
@@ -939,6 +1585,10 @@ function startMatch(){
     "Finding opponent..."
   );
 
+
+  /*
+    Searching dots animation.
+  */
 
   let dotCount =
     1;
@@ -976,9 +1626,7 @@ function startMatch(){
           );
 
 
-        if(
-          dots
-        ){
+        if(dots){
 
           dots.textContent =
             ".".repeat(
@@ -992,11 +1640,100 @@ function startMatch(){
     );
 
 
-  searchTimer =
-    setTimeout(
-      matchFound,
-      2000
+  /*
+    Add me to Firebase queue.
+  */
+
+  const myQueueRef =
+    ref(
+      realtimeDb,
+      "gameV2/matchmaking/" +
+      currentUser.uid
     );
+
+
+  try{
+
+    await set(
+      myQueueRef,
+      {
+
+        uid:
+          currentUser.uid,
+
+        username:
+          currentPlayer.username ||
+          "Player",
+
+        avatar:
+          currentPlayer.avatar ||
+          "😎",
+
+        gender:
+          currentPlayer.gender,
+
+        joinedAt:
+          rtdbServerTimestamp()
+
+      }
+    );
+
+
+    /*
+      إلا browser تسد أو النت تقطع،
+      Firebase يحاول يمسح queue entry.
+    */
+
+    try{
+
+      await onDisconnect(
+        myQueueRef
+      ).remove();
+
+    }
+
+    catch(error){
+
+      console.warn(
+        "ON DISCONNECT ERROR:",
+        error
+      );
+
+    }
+
+
+    watchMyAssignment();
+
+    watchMatchmakingQueue();
+
+    startBotFallbackTimer();
+
+  }
+
+  catch(error){
+
+    console.error(
+      "MATCHMAKING ERROR:",
+      error
+    );
+
+
+    matchRunning =
+      false;
+
+
+    matchOverlay
+      .classList
+      .add(
+        "hidden"
+      );
+
+
+    setStatus(
+      "Could not start matchmaking"
+    );
+
+  }
 
 }
 
@@ -1029,13 +1766,53 @@ playOnlineBtn.addEventListener(
 
 
 /* =========================
-   CANCEL MATCH
+   CANCEL
 ========================= */
 
 matchCancelBtn.addEventListener(
   "click",
   cancelMatch
 );
+
+
+/* =========================
+   ROOM CODE
+========================= */
+
+function generateRoomCode(){
+
+  const chars =
+    "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+
+  let code =
+    "";
+
+
+  for(
+    let i=0;
+    i<6;
+    i++
+  ){
+
+    const randomIndex =
+      Math.floor(
+        Math.random() *
+        chars.length
+      );
+
+
+    code +=
+      chars[
+        randomIndex
+      ];
+
+  }
+
+
+  return code;
+
+}
 
 
 /* =========================
