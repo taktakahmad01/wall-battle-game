@@ -11,13 +11,17 @@
 
   <title>Wall Battle</title>
 
-  
-  <link rel="stylesheet" href="css/game.css?v=4">
+  <link
+    rel="stylesheet"
+    href="css/game.css?v=5"
+  >
 </head>
 
 <body>
 
 <div id="app">
+
+  <!-- OPPONENT -->
 
   <div class="bot-zone">
 
@@ -26,12 +30,20 @@
       id="botCard"
     >
 
-      <div class="bot-dot"></div>
+      <div
+        class="bot-dot"
+        id="opponentAvatar"
+      >
+        🔴
+      </div>
 
       <div>
 
-        <div class="bot-name">
-          BOT 🔴
+        <div
+          class="bot-name"
+          id="opponentName"
+        >
+          BOT
         </div>
 
         <div
@@ -84,6 +96,8 @@
   </div>
 
 
+  <!-- BOARD -->
+
   <div class="game-middle">
 
     <div id="board">
@@ -111,6 +125,8 @@
   </div>
 
 
+  <!-- PLAYER ENERGY -->
+
   <div class="player-energy-space">
 
     <div
@@ -135,6 +151,8 @@
   </div>
 
 
+  <!-- PLAYER -->
+
   <div class="player-zone">
 
     <div
@@ -144,12 +162,20 @@
 
       <div class="player-header">
 
-        <div class="player-dot"></div>
+        <div
+          class="player-dot"
+          id="myGameAvatar"
+        >
+          🔵
+        </div>
 
         <div>
 
-          <div class="player-name">
-            YOU 🔵
+          <div
+            class="player-name"
+            id="myGameName"
+          >
+            YOU
           </div>
 
           <div
@@ -194,6 +220,7 @@
               <button
                 class="move-btn move-up"
                 data-dir="up"
+                type="button"
               >
                 &#9650;
               </button>
@@ -201,6 +228,7 @@
               <button
                 class="move-btn move-left"
                 data-dir="left"
+                type="button"
               >
                 &#9664;
               </button>
@@ -212,6 +240,7 @@
               <button
                 class="move-btn move-right"
                 data-dir="right"
+                type="button"
               >
                 &#9654;
               </button>
@@ -219,6 +248,7 @@
               <button
                 class="move-btn move-down"
                 data-dir="down"
+                type="button"
               >
                 &#9660;
               </button>
@@ -237,6 +267,7 @@
             <button
               class="wall-main"
               id="wallModeBtn"
+              type="button"
             >
               🧱 PLACE WALL
             </button>
@@ -246,6 +277,7 @@
               <button
                 class="orientation-btn selected"
                 id="horizontalBtn"
+                type="button"
               >
                 &#9473;&#9473;
               </button>
@@ -253,6 +285,7 @@
               <button
                 class="orientation-btn"
                 id="verticalBtn"
+                type="button"
               >
                 &#9475;
               </button>
@@ -271,6 +304,8 @@
 
 </div>
 
+
+<!-- RESULT -->
 
 <div
   class="overlay hidden"
@@ -301,6 +336,7 @@
     <button
       class="restart"
       id="restartBtn"
+      type="button"
     >
       REVENGE 🔥
     </button>
@@ -310,7 +346,10 @@
 </div>
 
 
-<script src="js/game.js?v=2"></script>
+<script
+  type="module"
+  src="js/game.js?v=10"
+></script>
 
 </body>
 </html>
